@@ -42,7 +42,7 @@ class IdentityGraph:
 
     def __init__(self):
         self._node_index: dict[str, dict[str, int]] = {"user": {}, "device": {}, "ip": {}}
-        self._edges: dict[tuple[str, str, str], dict[tuple[int, int], int]] = defaultdict(lambda: defaultdict(int))
+        self._edges: dict[tuple[str, str, str], dict[tuple[int, int], int]] = {}
 
     def _get_or_add(self, node_type: str, key: str) -> int:
         table = self._node_index[node_type]
@@ -50,17 +50,24 @@ class IdentityGraph:
             table[key] = len(table)
         return table[key]
 
+    def _add_edge(self, edge_type: tuple[str, str, str], src: int, dst: int):
+        if edge_type not in self._edges:
+            self._edges[edge_type] = {}
+        if (src, dst) not in self._edges[edge_type]:
+            self._edges[edge_type][(src, dst)] = 0
+        self._edges[edge_type][(src, dst)] += 1
+
     def add_event(self, event: dict) -> None:
         user_id, device_id, ip = event.get("user_id"), event.get("device_id"), event.get("ip_address")
         if user_id and device_id:
             u, d = self._get_or_add("user", user_id), self._get_or_add("device", device_id)
-            self._edges[("user", "uses", "device")][(u, d)] += 1
+            self._add_edge(("user", "uses", "device"), u, d)
         if user_id and ip:
             u, i = self._get_or_add("user", user_id), self._get_or_add("ip", ip)
-            self._edges[("user", "connects_from", "ip")][(u, i)] += 1
+            self._add_edge(("user", "connects_from", "ip"), u, i)
         if device_id and ip:
             d, i = self._get_or_add("device", device_id), self._get_or_add("ip", ip)
-            self._edges[("device", "seen_on", "ip")][(d, i)] += 1
+            self._add_edge(("device", "seen_on", "ip"), d, i)
 
     def node_id(self, node_type: str, key: str) -> int | None:
         return self._node_index[node_type].get(key)
