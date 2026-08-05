@@ -6,6 +6,8 @@ import { CaseDetail, Decision } from "@/lib/mockData";
 import SubScoreBreakdown from "./SubScoreBreakdown";
 import SHAPReasonCodes from "./SHAPReasonCodes";
 import DeviceGraphView from "./DeviceGraphView";
+import { triggerStepUpAuth, StepUpMethod } from "@/lib/api";
+import { useState } from "react";
 
 interface CaseDrillDownPanelProps {
   detail: CaseDetail | null;
@@ -19,8 +21,22 @@ const DECISION_STYLES: Record<Decision, { label: string; className: string }> = 
 };
 
 export default function CaseDrillDownPanel({ detail, onClose }: CaseDrillDownPanelProps) {
+  const [stepUpStatus, setStepUpStatus] = useState<"idle" | "loading" | "success">("idle");
   if (!detail) return null;
   const style = DECISION_STYLES[detail.decision];
+  
+  const handleStepUp = async () => {
+    setStepUpStatus("loading");
+    try {
+      // In a real app, you would route to /stepup?eventId=..., but for demo purposes
+      // we'll trigger the API directly here to show the frictionless flow
+      await triggerStepUpAuth(detail.id || detail.audit.eventId, "otp");
+      setStepUpStatus("success");
+    } catch (e) {
+      setStepUpStatus("idle");
+      console.error(e);
+    }
+  };
   
   // Parse DNA based on raw_event
   const typing = detail.raw_event?.typing_cadence_score ? Math.round(detail.raw_event.typing_cadence_score * 100) : 85;
@@ -41,6 +57,15 @@ export default function CaseDrillDownPanel({ detail, onClose }: CaseDrillDownPan
             <h2 className="text-lg font-bold text-ink font-mono">{detail.hmac}</h2>
           </div>
           <div className="flex items-center gap-4">
+            {detail.decision === "step_up" && (
+               <button 
+                 onClick={handleStepUp}
+                 disabled={stepUpStatus !== "idle"}
+                 className="text-xs font-bold bg-brand text-white px-3 py-1.5 rounded-md shadow hover:bg-brand/90 transition-colors disabled:opacity-50"
+               >
+                 {stepUpStatus === "idle" ? "Verify User (OTP)" : stepUpStatus === "loading" ? "Verifying..." : "Verified ✓"}
+               </button>
+            )}
             <span className={`text-xs font-bold uppercase tracking-wider rounded-md border px-3 py-1.5 ${style.className} shadow-inner`}>
               {style.label}
             </span>

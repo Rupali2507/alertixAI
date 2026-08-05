@@ -8,7 +8,7 @@
 
 import { DecisionEvent, generateMockEvent, generateMockFeed } from "./mockData";
 
-const USE_MOCK = true; // flip to false in Phase 6 once the live feed exists
+const USE_MOCK = false; // flip to false in Phase 6 once the live feed exists
 
 const ORCHESTRATOR_BASE_URL =
   process.env.NEXT_PUBLIC_ORCHESTRATOR_URL ?? "http://localhost:8000";

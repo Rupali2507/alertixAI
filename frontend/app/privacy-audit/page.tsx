@@ -24,7 +24,31 @@ export default function PrivacyAuditPage() {
   useEffect(() => {
     setPoints(generatePrivacyAnalytics());
     setCompliance(generateComplianceItems());
-    setRows(generateAuditLogRows());
+    
+    // Fetch REAL audit logs from backend
+    fetch("http://localhost:8000/audit")
+      .then(res => res.json())
+      .then(data => {
+        if (data.logs && data.logs.length > 0) {
+          const realRows: AuditLogRow[] = data.logs.map((log: any) => ({
+            id: log.event_id,
+            hmac: log.user_id_hash.substring(0, 8) + "..." + log.user_id_hash.slice(-4),
+            decision: log.decision,
+            fusedScore: Math.round(log.fused_score * 100),
+            reasonCodes: log.reason_codes,
+            timestamp: log.timestamp,
+            policyVersion: log.policy_version,
+          }));
+          setRows(realRows);
+        } else {
+          setRows(generateAuditLogRows()); // Fallback if empty
+        }
+      })
+      .catch(err => {
+        console.error("Failed to fetch real audit logs", err);
+        setRows(generateAuditLogRows());
+      });
+      
   }, []);
 
   return (

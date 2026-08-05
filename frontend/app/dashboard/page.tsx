@@ -24,6 +24,7 @@ import HighRiskEventsTable from "./components/HighRiskEventsTable";
 import AnomalousOriginsCard from "./components/AnomalousOriginsCard";
 import ScoreFusionCard from "./components/ScoreFusionCard";
 import CaseDrillDownPanel from "./components/CaseDrillDownPanel";
+import SimulatorButtons from "./components/SimulatorButtons";
 
 const MAX_EVENTS = 8;
 
@@ -56,7 +57,7 @@ export default function ThreatMonitorPage() {
   const [selectedCase, setSelectedCase] = useState<CaseDetail | null>(null);
 
   useEffect(() => {
-    setEvents(generateHighRiskEvents(MAX_EVENTS));
+    // Start empty to let the live feed populate naturally
     setTrust(generateTrustLevelStats());
     setStepUp(generateStepUpAuthStats());
     setCluster(generateAnomalyCluster());
@@ -69,7 +70,7 @@ export default function ThreatMonitorPage() {
       const newEvent: HighRiskEvent = {
         id: data.id,
         hmac: data.hmac,
-        score: data.score,
+        score: Math.round(data.score * 100), // Map 0-1 backend score to 0-100 UI score
         signalFusion: data.signalFusion,
         decision: data.decision,
         reasonLabel: data.reasonLabel,
@@ -104,6 +105,7 @@ export default function ThreatMonitorPage() {
       <LiveFeedTicker events={events} />
 
       <main className="p-6 space-y-6">
+        <SimulatorButtons />
         <WelcomeBanner />
         <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-4 items-start">
           <div className="space-y-4">
