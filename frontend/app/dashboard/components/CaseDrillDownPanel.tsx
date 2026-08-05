@@ -52,7 +52,26 @@ export default function CaseDrillDownPanel({ detail, onClose }: CaseDrillDownPan
             <span className="text-xs text-faint font-mono">
               {new Date(detail.timestamp).toLocaleString()}
             </span>
-            <span className="text-2xl font-bold font-mono text-ink">{detail.score}</span>
+            <span className="text-2xl font-bold font-mono text-ink">{detail.score}/100</span>
+          </div>
+
+          <div className="rounded-lg bg-brand/5 border border-brand/20 p-4 shadow-inner">
+            <h3 className="text-xs font-semibold text-brand tracking-wide uppercase mb-2">AI Summary</h3>
+            <p className="text-sm text-ink leading-relaxed">
+              {detail.decision === "block" ? "This event was automatically blocked due to critical risk factors. " : 
+               detail.decision === "step_up" ? "This event triggered a Step-Up Authentication challenge due to elevated risk. " : 
+               "This event was allowed as it showed no significant anomalies. "}
+               
+              {detail.decision !== "allow" && Object.entries(detail.subScores).sort((a, b) => b[1] - a[1])[0]?.[1] > 50 && (
+                `The primary concern was flagged by the ${
+                  Object.entries(detail.subScores).sort((a, b) => b[1] - a[1])[0][0].replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())
+                } model. `
+              )}
+              
+              {detail.reasonCodes && detail.reasonCodes.length > 0 && detail.decision !== "allow" && (
+                `Specific indicators include: ${detail.reasonCodes.slice(0,2).map(r => r.feature.replace(/_/g, ' ')).join(', ')}.`
+              )}
+            </p>
           </div>
 
           <SubScoreBreakdown subScores={detail.subScores} />

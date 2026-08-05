@@ -1,7 +1,7 @@
 // app/dashboard/components/GlobalTrustCard.tsx
 "use client";
 
-import { AtSign } from "lucide-react";
+import { Info } from "lucide-react";
 import { TrustLevelStats } from "@/lib/mockData";
 
 interface GlobalTrustCardProps {
@@ -10,10 +10,18 @@ interface GlobalTrustCardProps {
 
 export default function GlobalTrustCard({ stats }: GlobalTrustCardProps) {
   return (
-    <div className="rounded-xl border border-border bg-panel p-5 flex flex-col">
-      <div className="flex items-center justify-between mb-8">
-        <h2 className="text-base font-semibold text-ink">Global Trust Level</h2>
-        <AtSign size={16} className="text-faint" />
+    <div className="rounded-xl border border-border bg-panel p-5 flex flex-col hover:border-brand/30 transition-colors shadow-sm">
+      <div className="flex items-center justify-between mb-8 group relative">
+        <div className="flex items-center gap-2">
+          <h2 className="text-base font-semibold text-ink">Global Trust Level</h2>
+          <div className="relative flex items-center">
+            <Info size={14} className="text-mist hover:text-ink cursor-help peer" />
+            <div className="absolute left-6 w-48 p-2 bg-panel-2 border border-border rounded text-xs text-mist opacity-0 peer-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-lg">
+              The overall health of the system based on the ratio of allowed vs. blocked events.
+            </div>
+          </div>
+        </div>
+        <div className="h-2 w-2 rounded-full bg-brand animate-pulse"></div>
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center">

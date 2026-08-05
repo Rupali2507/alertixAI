@@ -2,6 +2,7 @@
 "use client";
 
 import Link from "next/link";
+import { Info } from "lucide-react";
 import { HighRiskEvent } from "@/lib/mockData";
 
 interface HighRiskEventsTableProps {
@@ -61,7 +62,15 @@ export default function HighRiskEventsTable({ events, onRowClick }: HighRiskEven
   return (
     <div className="rounded-xl border border-border bg-panel p-5">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-base font-semibold text-ink">High-Risk Events</h2>
+        <div className="flex items-center gap-2 group relative">
+          <h2 className="text-base font-semibold text-ink">Live Event Stream</h2>
+          <div className="relative flex items-center">
+            <Info size={14} className="text-mist hover:text-ink cursor-help peer" />
+            <div className="absolute left-6 w-56 p-2 bg-panel-2 border border-border rounded text-xs text-mist opacity-0 peer-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-lg">
+              A real-time feed of events processed by the Decision Engine. Click any row for a detailed AI rationale.
+            </div>
+          </div>
+        </div>
         <button className="text-xs rounded-md border border-border bg-panel-2 px-3 py-1.5 text-mist hover:text-ink">
           View Full Log
         </button>
@@ -87,7 +96,15 @@ export default function HighRiskEventsTable({ events, onRowClick }: HighRiskEven
                 <LeftBar decision={e.decision} />
                 {e.hmac}
               </td>
-              <td className="py-3 font-mono text-mist">{e.score.toFixed(2)}</td>
+              <td className="py-3 font-mono">
+                {e.score < 0.5 ? (
+                  <span className="text-success bg-success/10 border border-success/20 px-2 py-0.5 rounded text-xs">{(e.score * 100).toFixed(0)} - LOW</span>
+                ) : e.score < 0.75 ? (
+                  <span className="text-warning bg-warning/10 border border-warning/20 px-2 py-0.5 rounded text-xs">{(e.score * 100).toFixed(0)} - ELEVATED</span>
+                ) : (
+                  <span className="text-danger bg-danger/10 border border-danger/20 px-2 py-0.5 rounded text-xs">{(e.score * 100).toFixed(0)} - CRITICAL</span>
+                )}
+              </td>
               <td className="py-3">
                 <SignalFusionBars values={e.signalFusion} />
               </td>
