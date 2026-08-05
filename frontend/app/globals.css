@@ -1,0 +1,42 @@
+/* app/globals.css */
+@import "tailwindcss";
+
+@theme {
+  /* Surfaces */
+  --color-void: #0a0e17;      /* page background */
+  --color-sidebar: #0b0f19;   /* sidebar background */
+  --color-panel: #10151f;     /* card / panel surface */
+  --color-panel-2: #161c28;   /* raised surface (hover, inputs, badges) */
+  --color-border: #1e2636;    /* hairline borders */
+
+  /* Text */
+  --color-ink: #f1f5f9;       /* primary text / headings */
+  --color-mist: #94a3b8;      /* secondary / muted text */
+  --color-faint: #566072;     /* tertiary / disabled text */
+
+  /* Brand accent — indigo, used for logo, active nav, links, primary buttons */
+  --color-brand: #6366f1;
+  --color-brand-dim: #6366f11f;
+
+  /* Semantic status */
+  --color-danger: #f87171;
+  --color-danger-solid: #ef4444;
+  --color-warning: #fb923c;
+  --color-success: #4ade80;
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+::selection {
+  background: var(--color-brand-dim);
+  color: var(--color-ink);
+}
