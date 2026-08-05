@@ -547,14 +547,25 @@ export function generateContainerStatus(): ContainerStatusRow[] {
 // --- Case drill-down bridge (Threat Monitor row -> full case detail) ---
 
 export interface CaseDetail {
+  id: string;
   hmac: string;
+  score: number;
   decision: Decision;
-  score: number; // 0-100
   timestamp: string;
-  subScores: SubScores;
+  subScores: Record<string, number>;
   reasonCodes: ReasonCode[];
-  deviceGraph: DeviceGraph;
-  audit: AuditLogEntry;
+  deviceGraph: {
+    nodes: number;
+    edges: number;
+    communityRisk: number;
+  };
+  audit: {
+    policyVersion: string;
+    consentBasis: string;
+    eventId: string;
+  };
+  raw_event?: any;
+  investigator_report?: string;
 }
 
 export function generateCaseDetail(source: HighRiskEvent): CaseDetail {

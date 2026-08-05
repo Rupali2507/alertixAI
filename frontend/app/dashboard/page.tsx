@@ -147,7 +147,9 @@ export default function ThreatMonitorPage() {
                     policyVersion: "v1.0-live",
                     timestamp: event.timestamp,
                     consentBasis: "legitimate_interest_fraud_prevention",
-                  }
+                  },
+                  raw_event: raw.raw_event,
+                  investigator_report: raw.investigator_report
                 });
               } else {
                 setSelectedCase(generateCaseDetail(event));

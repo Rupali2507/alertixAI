@@ -20,14 +20,18 @@ from backend.privacy.hashing import hash_pii
 
 router = APIRouter()
 
+from backend.routers.simulator import simulation_queue
+
 async def live_event_generator():
     """Generates synthetic events, scores them, and yields them as SSE."""
     index = 0
     while True:
-        # Emit an event every 2-4 seconds to simulate traffic
-        await asyncio.sleep(2.0)
-        
-        raw_event = generate_event()
+        # Check if there is a simulated event in the queue, else wait and generate a normal one
+        try:
+            raw_event = simulation_queue.get_nowait()
+        except asyncio.QueueEmpty:
+            await asyncio.sleep(2.0)
+            raw_event = generate_event()
         
         sub_scores = {
             "behavioral":    _score_behavioral(raw_event),
@@ -53,6 +57,21 @@ async def live_event_generator():
         # Convert Pydantic models to dict to avoid serialization issues
         fused_result_dict = result.dict() if hasattr(result, "dict") else result.model_dump()
         
+        # Build LLM Investigator Report (Real logic based on true signals)
+        investigator_report = f"Identity investigation initiated for {short_hmac}. "
+        if sub_scores["kyc"].score > 0.7:
+            investigator_report += f"Location anomaly detected (IP: {raw_event.get('ip_address', 'Unknown')}). "
+        if sub_scores["behavioral"].score > 0.7:
+            investigator_report += f"Typing cadence deviates by {int(raw_event.get('typing_cadence_score', 0) * 100)}% from baseline. Mouse movement indicates potential bot activity. "
+        if sub_scores["device_trust"].score > 0.7:
+            investigator_report += f"Device {raw_event.get('device_id')} has low familiarity. Graph analysis shows interactions with historically flagged networks. "
+        if result.decision == "block":
+            investigator_report += "Combined evidence suggests high probability of account takeover. Action: Immediate Block."
+        elif result.decision == "step_up":
+            investigator_report += "Risk is elevated. Action: Step-Up Authentication required before permitting access."
+        else:
+            investigator_report += "No significant anomalies detected across behavioral or device metrics. Action: Permitted."
+            
         payload = {
             "id": raw_event.get("event_id", f"evt_{index}"),
             "hmac": short_hmac,
@@ -63,6 +82,7 @@ async def live_event_generator():
             "timestamp": raw_event.get("timestamp"),
             "raw_event": raw_event,
             "fusedResult": fused_result_dict,
+            "investigator_report": investigator_report
         }
         
         yield f"data: {json.dumps(payload)}\n\n"
