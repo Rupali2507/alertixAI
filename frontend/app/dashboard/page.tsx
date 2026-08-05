@@ -117,6 +117,7 @@ export default function ThreatMonitorPage() {
                 const raw = (event as any)._rawCaseDetail;
                 const fused = raw.fusedResult;
                 setSelectedCase({
+                  id: event.id,
                   hmac: event.hmac,
                   decision: event.decision,
                   score: Math.round(event.score * 100),
