@@ -10,10 +10,12 @@ import {
   ActivitySquare,
   HelpCircle,
   FileText,
+  Network
 } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Threat Monitor", icon: ShieldAlert },
+  { href: "/graph", label: "3D Threat Graph", icon: Network },
   { href: "/insider-misuse", label: "Insider Misuse", icon: UserSearch },
   { href: "/privacy-audit", label: "Privacy & Audit", icon: ShieldCheck },
   { href: "/system-health", label: "System Health", icon: ActivitySquare },
@@ -21,6 +23,8 @@ const NAV_ITEMS = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+
+  if (pathname === "/") return null;
 
   return (
     <aside className="w-64 shrink-0 border-r border-border bg-sidebar flex flex-col justify-between min-h-screen px-3 py-5">

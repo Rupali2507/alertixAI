@@ -1,7 +1,7 @@
 // app/dashboard/components/ScoreFusionCard.tsx
 "use client";
 
-import { Brain, Laptop2, IdCard } from "lucide-react";
+import { Brain, Laptop2, IdCard, Info } from "lucide-react";
 import { SubScores } from "@/lib/mockData";
 
 interface ScoreFusionCardProps {
@@ -16,8 +16,16 @@ const ROWS: { key: keyof SubScores; label: string; icon: typeof Brain }[] = [
 
 export default function ScoreFusionCard({ subScores }: ScoreFusionCardProps) {
   return (
-    <div className="rounded-xl border border-border bg-panel p-5">
-      <h2 className="text-base font-semibold text-ink mb-4">Score Fusion Breakdown</h2>
+    <div className="rounded-xl border border-border bg-panel p-5 hover:border-brand/30 transition-colors shadow-sm">
+      <div className="flex items-center gap-2 mb-4 group relative">
+        <h2 className="text-base font-semibold text-ink">Score Fusion Breakdown</h2>
+        <div className="relative flex items-center">
+          <Info size={14} className="text-mist hover:text-ink cursor-help peer" />
+          <div className="absolute left-6 w-48 p-2 bg-panel-2 border border-border rounded text-xs text-mist opacity-0 peer-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-lg">
+            How the different AI models contributed to the average risk score for recent events.
+          </div>
+        </div>
+      </div>
 
       <div className="space-y-4">
         {ROWS.map(({ key, label, icon: Icon }) => {

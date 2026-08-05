@@ -3,26 +3,26 @@
 
 @theme {
   /* Surfaces */
-  --color-void: #0a0e17;      /* page background */
-  --color-sidebar: #0b0f19;   /* sidebar background */
-  --color-panel: #10151f;     /* card / panel surface */
-  --color-panel-2: #161c28;   /* raised surface (hover, inputs, badges) */
-  --color-border: #1e2636;    /* hairline borders */
+  --color-void: #02040A;      /* deep space background */
+  --color-sidebar: #050A14;   /* sidebar background */
+  --color-panel: #0A1121;     /* card / panel surface */
+  --color-panel-2: #10182B;   /* raised surface (hover, inputs, badges) */
+  --color-border: #1E293B;    /* hairline borders */
 
   /* Text */
-  --color-ink: #f1f5f9;       /* primary text / headings */
-  --color-mist: #94a3b8;      /* secondary / muted text */
-  --color-faint: #566072;     /* tertiary / disabled text */
+  --color-ink: #F8FAFC;       /* primary text / headings */
+  --color-mist: #94A3B8;      /* secondary / muted text */
+  --color-faint: #475569;     /* tertiary / disabled text */
 
-  /* Brand accent — indigo, used for logo, active nav, links, primary buttons */
-  --color-brand: #6366f1;
-  --color-brand-dim: #6366f11f;
+  /* Brand accent — Neon Cyan */
+  --color-brand: #06B6D4;
+  --color-brand-dim: rgba(6, 182, 212, 0.12);
 
   /* Semantic status */
-  --color-danger: #f87171;
-  --color-danger-solid: #ef4444;
-  --color-warning: #fb923c;
-  --color-success: #4ade80;
+  --color-danger: #F43F5E;       /* Rose/Crimson */
+  --color-danger-solid: #E11D48;
+  --color-warning: #F59E0B;      /* Amber */
+  --color-success: #10B981;      /* Emerald */
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);

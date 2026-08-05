@@ -16,7 +16,7 @@ import {
   generateAnomalyCluster,
   generateCaseDetail,
 } from "@/lib/mockData";
-import TopBar from "../components/TopBar";
+import WelcomeBanner from "./components/WelcomeBanner";
 import LiveFeedTicker from "./components/LiveFeedTicker";
 import GlobalTrustCard from "./components/GlobalTrustCard";
 import StepUpAuthCard from "./components/StepUpAuthCard";
@@ -101,10 +101,10 @@ export default function ThreatMonitorPage() {
 
   return (
     <div className="min-h-screen">
-      <TopBar />
       <LiveFeedTicker events={events} />
 
-      <main className="p-6 space-y-4">
+      <main className="p-6 space-y-6">
+        <WelcomeBanner />
         <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-4 items-start">
           <div className="space-y-4">
             <GlobalTrustCard stats={trust} />
