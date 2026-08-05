@@ -61,16 +61,34 @@ export default function ThreatMonitorPage() {
     setStepUp(generateStepUpAuthStats());
     setCluster(generateAnomalyCluster());
 
-    let i = 1000;
-    const timer = setInterval(() => {
+    const eventSource = new EventSource("http://localhost:8000/feed");
+
+    eventSource.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      // Construct a HighRiskEvent from the payload
+      const newEvent: HighRiskEvent = {
+        id: data.id,
+        hmac: data.hmac,
+        score: data.score,
+        signalFusion: data.signalFusion,
+        decision: data.decision,
+        reasonLabel: data.reasonLabel,
+        timestamp: data.timestamp,
+        // we can store raw data here if needed, but HighRiskEvent typing doesn't include it.
+        // We pass the full backend result through to generateCaseDetail below
+      };
+      
+      // Store the raw backend result so CaseDrillDownPanel can see it
+      (newEvent as any)._rawCaseDetail = data;
+      
       setEvents((prev) =>
-        [generateHighRiskEvent(i++), ...prev]
+        [newEvent, ...prev]
           .sort((a, b) => b.score - a.score)
           .slice(0, MAX_EVENTS)
       );
-    }, 5000);
+    };
 
-    return () => clearInterval(timer);
+    return () => eventSource.close();
   }, []);
 
   if (!trust || !stepUp || !cluster) {
@@ -94,7 +112,47 @@ export default function ThreatMonitorPage() {
           </div>
           <HighRiskEventsTable
             events={events}
-            onRowClick={(event) => setSelectedCase(generateCaseDetail(event))}
+            onRowClick={(event) => {
+              if ((event as any)._rawCaseDetail) {
+                const raw = (event as any)._rawCaseDetail;
+                const fused = raw.fusedResult;
+                setSelectedCase({
+                  hmac: event.hmac,
+                  decision: event.decision,
+                  score: Math.round(event.score * 100),
+                  timestamp: event.timestamp,
+                  subScores: {
+                    behavioral: Math.round((fused.sub_scores.behavioral?.score || 0) * 100),
+                    deviceTrust: Math.round((fused.sub_scores.device_trust?.score || 0) * 100),
+                    kyc: Math.round((fused.sub_scores.kyc?.score || 0) * 100),
+                    insiderMisuse: Math.round((fused.sub_scores.insider_misuse?.score || 0) * 100),
+                  },
+                  reasonCodes: fused.reason_codes.map((code: string) => ({
+                    feature: code,
+                    contribution: 0.15, // Mock value since backend doesn't send SHAP values directly yet
+                    direction: "increases_risk"
+                  })),
+                  deviceGraph: generateCaseDetail(event).deviceGraph, // Keep mock graph for now
+                  audit: {
+                    eventId: event.id,
+                    decision: event.decision,
+                    fusedScore: Math.round(event.score * 100),
+                    subScores: {
+                      behavioral: Math.round((fused.sub_scores.behavioral?.score || 0) * 100),
+                      deviceTrust: Math.round((fused.sub_scores.device_trust?.score || 0) * 100),
+                      kyc: Math.round((fused.sub_scores.kyc?.score || 0) * 100),
+                      insiderMisuse: Math.round((fused.sub_scores.insider_misuse?.score || 0) * 100),
+                    },
+                    reasonCodes: [],
+                    policyVersion: "v1.0-live",
+                    timestamp: event.timestamp,
+                    consentBasis: "legitimate_interest_fraud_prevention",
+                  }
+                });
+              } else {
+                setSelectedCase(generateCaseDetail(event));
+              }
+            }}
           />
         </div>
 

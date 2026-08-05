@@ -34,8 +34,12 @@ class KYCFraudDetector(BaseDetector):
             raise ValueError("No onboarding/KYC events found to train on.")
         y = weak_fraud_labels(X)
 
+        # stratify only when each class has at least 2 members; weak labels
+        # may produce very few positives on a small/homogeneous dataset
+        unique, counts = np.unique(y, return_counts=True)
+        can_stratify = len(unique) > 1 and counts.min() >= 2
         X_train, X_val, y_train, y_val = train_test_split(
-            X, y, test_size=0.2, random_state=42, stratify=y if len(np.unique(y)) > 1 else None,
+            X, y, test_size=0.2, random_state=42, stratify=y if can_stratify else None,
         )
         self.model.fit(X_train, y_train, eval_set=(X_val, y_val))
         self.explainer = KYCShapExplainer(self.model.model)
