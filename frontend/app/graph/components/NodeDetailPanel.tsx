@@ -58,8 +58,8 @@ export default function NodeDetailPanel({
   const neighbors = neighborsOf(node.id, edges, nodesById);
 
   return (
-    <div className="absolute top-24 right-6 z-20 w-80 glass-card-strong rounded-2xl p-5 shadow-2xl">
-      <div className="flex items-start justify-between mb-4">
+    <div className="absolute top-6 right-6 z-20 w-80 bg-panel/95 border border-border/80 backdrop-blur-xl rounded-2xl p-5 shadow-2xl">
+      <div className="flex items-start justify-between mb-4 shrink-0">
         <div className="flex items-center gap-2.5">
           <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${node.suspicious ? "bg-danger/15 border border-danger/30" : "bg-brand-dim border border-brand/25"}`}>
             <Icon size={16} className={node.suspicious ? "text-danger" : "text-brand"} />
@@ -75,7 +75,7 @@ export default function NodeDetailPanel({
       </div>
 
       {node.suspicious && (
-        <div className="flex items-start gap-2 rounded-xl border border-danger/25 bg-danger/[0.06] px-3 py-2.5 mb-4">
+        <div className="flex items-start gap-2 rounded-xl border border-danger/25 bg-danger/[0.06] px-3 py-2.5 mb-4 shrink-0">
           <AlertTriangle size={14} className="text-danger shrink-0 mt-0.5" />
           <p className="text-[11px] text-danger leading-relaxed">
             Fan-out signature: connected to {node.degree} distinct entities, above the
@@ -84,23 +84,23 @@ export default function NodeDetailPanel({
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-3 mb-5">
-        <div className="glass-card rounded-xl px-3 py-2.5">
-          <p className="text-[10px] text-faint mb-1">Degree</p>
-          <p className="text-lg font-medium text-ink tabular-nums">{node.degree}</p>
+      <div className="grid grid-cols-2 gap-3 mb-5 shrink-0">
+        <div className="bg-panel-2/80 border border-border/50 rounded-xl px-3 py-2.5">
+          <p className="text-[10px] text-faint mb-1 uppercase tracking-widest font-semibold">Degree</p>
+          <p className="text-lg font-bold text-ink tabular-nums">{node.degree}</p>
         </div>
-        <div className="glass-card rounded-xl px-3 py-2.5">
-          <p className="text-[10px] text-faint mb-1">Status</p>
+        <div className="bg-panel-2/80 border border-border/50 rounded-xl px-3 py-2.5">
+          <p className="text-[10px] text-faint mb-1 uppercase tracking-widest font-semibold">Status</p>
           <p className={`text-sm font-medium ${node.suspicious ? "text-danger" : "text-success"}`}>
             {node.suspicious ? "Flagged" : "Normal"}
           </p>
         </div>
       </div>
 
-      <p className="text-[11px] text-faint tracking-label mb-2">
+      <p className="text-[11px] text-faint tracking-label mb-2 shrink-0">
         Connected entities ({neighbors.length}{neighbors.length === 8 ? "+" : ""})
       </p>
-      <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
+      <div className="space-y-1.5 flex-1 min-h-0 overflow-y-auto pr-1">
         {neighbors.length === 0 && (
           <p className="text-xs text-faint italic">No edges in the current window.</p>
         )}
@@ -110,10 +110,10 @@ export default function NodeDetailPanel({
             <button
               key={n.node.id}
               onClick={() => onSelectNeighbor(n.node.id)}
-              className="w-full flex items-center justify-between gap-2 rounded-lg glass-card px-3 py-2 hover:border-brand/30 transition-colors text-left"
+              className="w-full flex items-center justify-between gap-2 rounded-lg bg-panel-2/50 border border-border/30 px-3 py-2 hover:border-brand/50 hover:bg-panel-2 transition-colors text-left group"
             >
               <span className="flex items-center gap-2 min-w-0">
-                <NIcon size={12} className={n.node.suspicious ? "text-danger" : "text-mist"} />
+                <NIcon size={12} className={n.node.suspicious ? "text-danger" : "text-mist group-hover:text-ink transition-colors"} />
                 <span className="text-xs text-ink font-mono truncate">{n.node.label}</span>
               </span>
               <span className="text-[10px] text-faint shrink-0">×{n.weight}</span>
