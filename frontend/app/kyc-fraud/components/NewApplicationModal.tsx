@@ -1,13 +1,12 @@
-// app/kyc-fraud/components/NewApplicationModal.tsx
 "use client";
 
 import { useState } from "react";
-import { X, FileCheck } from "lucide-react";
-import { ApplicationInput } from "@/lib/kycFraudData";
+import { X, FileCheck, Sparkles, ChevronDown } from "lucide-react";
+import { ApplicationInput, KYC_DEMO_SCENARIOS, submitToIdentityGraphService, KycApplicant, DemoScenario } from "@/lib/kycFraudData";
 
 interface Props {
   onClose: () => void;
-  onSubmit: (input: ApplicationInput) => void;
+  onSubmit: (applicant: KycApplicant) => void; // now receives the resolved applicant
 }
 
 const FIELD_META: { key: keyof ApplicationInput; label: string; placeholder: string; required: boolean }[] = [
@@ -22,15 +21,23 @@ const FIELD_META: { key: keyof ApplicationInput; label: string; placeholder: str
 
 export default function NewApplicationModal({ onClose, onSubmit }: Props) {
   const [form, setForm] = useState<Record<string, string>>({});
-  const [submitting, setSubmitting] = useState(false);
+  const [manualOpen, setManualOpen] = useState(false);
+  const [stage, setStage] = useState<string | null>(null);
 
-  const canSubmit = FIELD_META.filter((f) => f.required).every((f) => (form[f.key] ?? "").trim().length > 0);
+  const canSubmitManual = FIELD_META.filter((f) => f.required).every((f) => (form[f.key] ?? "").trim().length > 0);
 
-  const handleSubmit = () => {
-    if (!canSubmit) return;
-    setSubmitting(true);
-    setTimeout(() => {
-      onSubmit({
+  const runScenario = async (s: DemoScenario & { burstPattern: boolean }) => {
+    setStage("Verifying document authenticity…");
+    const applicant = await submitToIdentityGraphService(s.build(), "manual_submission", s.burstPattern, setStage);
+    setStage(null);
+    onSubmit(applicant);
+  };
+
+  const handleManualSubmit = async () => {
+    if (!canSubmitManual) return;
+    setStage("Verifying document authenticity…");
+    const applicant = await submitToIdentityGraphService(
+      {
         name: form.name.trim(),
         phone: form.phone.trim(),
         address: form.address.trim(),
@@ -38,9 +45,13 @@ export default function NewApplicationModal({ onClose, onSubmit }: Props) {
         ipAddress: form.ipAddress.trim(),
         faceRef: form.faceRef.trim(),
         bankAccount: form.bankAccount?.trim() || undefined,
-      });
-      setSubmitting(false);
-    }, 550);
+      },
+      "manual_submission",
+      false,
+      setStage
+    );
+    setStage(null);
+    onSubmit(applicant);
   };
 
   return (
@@ -57,35 +68,75 @@ export default function NewApplicationModal({ onClose, onSubmit }: Props) {
           </button>
         </div>
 
-        <div className="p-6 space-y-5">
-          <p className="text-xs text-mist leading-relaxed">
-            Enter the applicant&apos;s declared details along with the device, IP, and face-scan reference
-            captured during their onboarding session. These get checked against the identity graph.
-          </p>
-
-          {FIELD_META.map((f) => (
-            <div key={f.key}>
-              <label className="text-xs text-mist mb-1.5 block">
-                {f.label}
-                {f.required && <span className="text-danger ml-0.5">*</span>}
-              </label>
-              <input
-                value={form[f.key] ?? ""}
-                onChange={(e) => setForm((prev) => ({ ...prev, [f.key]: e.target.value }))}
-                placeholder={f.placeholder}
-                className="w-full rounded-lg border border-border bg-void px-3.5 py-2.5 text-sm text-ink placeholder:text-faint outline-none focus:border-brand transition-colors"
-              />
+        <div className="p-6 space-y-6">
+          {stage ? (
+            <div className="flex flex-col items-center justify-center py-16 gap-4">
+              <div className="h-8 w-8 rounded-full border-2 border-brand border-t-transparent animate-spin" />
+              <p className="text-sm text-mist font-mono">{stage}</p>
             </div>
-          ))}
+          ) : (
+            <>
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <Sparkles size={14} className="text-brand" />
+                  <p className="text-sm font-medium text-ink">Run intake scenario</p>
+                </div>
+                <p className="text-xs text-mist leading-relaxed mb-4">
+                  Simulates a captured onboarding session (device, IP, and face-scan reference)
+                  being checked against the identity graph.
+                </p>
+                <div className="space-y-2">
+                  {KYC_DEMO_SCENARIOS.map((s) => (
+                    <button
+                      key={s.id}
+                      onClick={() => runScenario(s)}
+                      className="w-full text-left rounded-lg border border-border bg-void px-4 py-3 hover:border-brand/50 transition-colors"
+                    >
+                      <p className="text-sm font-medium text-ink">{s.label}</p>
+                      <p className="text-xs text-mist mt-0.5">{s.sub}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-          <button
-            onClick={handleSubmit}
-            disabled={!canSubmit || submitting}
-            className="w-full flex items-center justify-center gap-2 rounded-lg bg-brand text-black text-sm font-medium py-3 hover:bg-brand/90 disabled:opacity-40 transition-colors mt-2"
-          >
-            <FileCheck size={15} />
-            {submitting ? "Checking identity graph…" : "Submit for verification"}
-          </button>
+              <div className="border-t border-border pt-4">
+                <button
+                  onClick={() => setManualOpen((v) => !v)}
+                  className="flex items-center gap-1.5 text-xs text-mist hover:text-ink"
+                >
+                  <ChevronDown size={13} className={`transition-transform ${manualOpen ? "rotate-180" : ""}`} />
+                  Manual analyst entry
+                </button>
+
+                {manualOpen && (
+                  <div className="space-y-4 mt-4">
+                    {FIELD_META.map((f) => (
+                      <div key={f.key}>
+                        <label className="text-xs text-mist mb-1.5 block">
+                          {f.label}
+                          {f.required && <span className="text-danger ml-0.5">*</span>}
+                        </label>
+                        <input
+                          value={form[f.key] ?? ""}
+                          onChange={(e) => setForm((prev) => ({ ...prev, [f.key]: e.target.value }))}
+                          placeholder={f.placeholder}
+                          className="w-full rounded-lg border border-border bg-void px-3.5 py-2.5 text-sm text-ink placeholder:text-faint outline-none focus:border-brand transition-colors"
+                        />
+                      </div>
+                    ))}
+                    <button
+                      onClick={handleManualSubmit}
+                      disabled={!canSubmitManual}
+                      className="w-full flex items-center justify-center gap-2 rounded-lg bg-brand text-black text-sm font-medium py-3 hover:bg-brand/90 disabled:opacity-40 transition-colors"
+                    >
+                      <FileCheck size={15} />
+                      Submit for verification
+                    </button>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </div>
       </div>
     </>

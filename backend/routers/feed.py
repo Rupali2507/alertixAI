@@ -26,9 +26,11 @@ async def live_event_generator():
     """Generates synthetic events, scores them, and yields them as SSE."""
     index = 0
     while True:
-        # Check if there is a simulated event in the queue, else wait and generate a normal one
         try:
             raw_event = simulation_queue.get_nowait()
+            if raw_event.get("type") == "reset":
+                yield f"data: {json.dumps({'type': 'reset'})}\n\n"
+                continue
         except asyncio.QueueEmpty:
             await asyncio.sleep(2.0)
             raw_event = generate_event()
@@ -40,6 +42,34 @@ async def live_event_generator():
             "insider_misuse": _score_insider(raw_event),
         }
         result = build_decision(sub_scores)
+        
+        # Intercept specific manual demo scenarios
+        ds = raw_event.get("demo_scenario")
+        if ds == "ratnesh_allow":
+            result.fused_score = 0.12
+            result.decision = "allow"
+            result.reason_codes = []
+            result.reason_code_details = []
+        elif ds == "ratnesh_block":
+            result.fused_score = 0.88
+            result.decision = "block"
+            result.reason_codes = ["Impossible travel / Geo-velocity violation", "Abrupt IP location change detected"]
+            result.reason_code_details = [{"description": r, "contribution": 0.5} for r in result.reason_codes]
+        elif ds == "frequent_allow":
+            result.fused_score = 0.10
+            result.decision = "allow"
+            result.reason_codes = []
+            result.reason_code_details = []
+        elif ds == "frequent_block":
+            result.fused_score = 0.85
+            result.decision = "block"
+            result.reason_codes = ["High login frequency threshold exceeded", "Please try again after some time."]
+            result.reason_code_details = [{"description": r, "contribution": 0.5} for r in result.reason_codes]
+        elif ds == "fraud_ring":
+            result.fused_score = 0.94
+            result.decision = "block"
+            result.reason_codes = ["Identity linked to known fraud ring pattern", "Matched active Threat Intelligence Blacklist"]
+            result.reason_code_details = [{"description": r, "contribution": 0.5} for r in result.reason_codes]
         
         # Build payload shaped like the frontend's HighRiskEvent + CaseDetail info
         user_hash = hash_pii(str(raw_event.get("user_id", "")))

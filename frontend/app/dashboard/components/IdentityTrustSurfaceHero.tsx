@@ -61,14 +61,14 @@ export default function IdentityTrustSurfaceHero({
         </button>
       </div>
 
-      <h2 className="text-2xl font-medium text-ink mb-8 relative z-10">Identity trust surface</h2>
+      <h2 className="text-2xl font-medium text-ink mb-8 relative z-10">System Health & Actions</h2>
 
       <div className="grid grid-cols-1 lg:grid-cols-[auto_1fr] gap-8 items-start relative z-10">
-        <TrustGauge score={latestRiskScore} size={168} strokeWidth={13} label="trust score" />
+        <TrustGauge score={latestRiskScore} size={168} strokeWidth={13} label="Risk Score" />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="glass-card rounded-2xl px-5 py-4">
-            <p className="text-[11px] text-faint tracking-label mb-2">Allowed</p>
+            <p className="text-[11px] text-faint tracking-label mb-2">Safe Users (Allowed)</p>
             <p className="text-3xl font-medium text-ink tabular-nums mb-2.5">
               {allowPct.toFixed(1)}
               <span className="text-base text-mist font-normal">%</span>
@@ -79,7 +79,7 @@ export default function IdentityTrustSurfaceHero({
           </div>
 
           <div className="glass-card rounded-2xl px-5 py-4">
-            <p className="text-[11px] text-faint tracking-label mb-2">Step-up</p>
+            <p className="text-[11px] text-faint tracking-label mb-2">Suspicious (Step-up)</p>
             <p className="text-3xl font-medium text-ink tabular-nums mb-2.5">
               {stepUpPct.toFixed(1)}
               <span className="text-base text-mist font-normal">%</span>
@@ -91,7 +91,7 @@ export default function IdentityTrustSurfaceHero({
 
           <div className="sm:col-span-2 rounded-2xl px-5 py-4 border border-danger/25 bg-danger/[0.06] flex items-center justify-between">
             <div>
-              <p className="text-[11px] text-danger tracking-label mb-2">Blocked · Critical</p>
+              <p className="text-[11px] text-danger tracking-label mb-2">Fraud Blocked (Critical)</p>
               <p className="text-3xl font-medium text-ink tabular-nums">
                 {blockPct.toFixed(1)}
                 <span className="text-base text-mist font-normal">%</span>
@@ -110,9 +110,9 @@ export default function IdentityTrustSurfaceHero({
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3 relative z-10">
         {[
-          { label: "behavioral", value: subScores.behavioral, dir: trend?.behavioral },
-          { label: "device trust", value: subScores.deviceTrust, dir: trend?.deviceTrust },
-          { label: "kyc + insider", value: kycInsider, dir: trend?.kycInsider },
+          { label: "Behavioral Risk", value: subScores.behavioral, dir: trend?.behavioral },
+          { label: "Device Risk", value: subScores.deviceTrust, dir: trend?.deviceTrust },
+          { label: "Identity Risk", value: kycInsider, dir: trend?.kycInsider },
         ].map((s) => (
           <div key={s.label} className="glass-card rounded-2xl px-5 py-4 flex items-center justify-between">
             <div>

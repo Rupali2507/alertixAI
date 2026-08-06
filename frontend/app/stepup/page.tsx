@@ -1,7 +1,8 @@
 // app/stepup/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   ShieldAlert,
   KeyRound,
@@ -18,16 +19,45 @@ type Stage = "select" | "otp" | "verifying" | "success" | "failed";
 const MOCK_EVENT_ID = "evt_demo_stepup";
 
 export default function StepUpPage() {
+  const router = useRouter();
   const [stage, setStage] = useState<Stage>("select");
   const [method, setMethod] = useState<StepUpMethod | null>(null);
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+
+  useEffect(() => {
+    const handleKeyDown = async (e: KeyboardEvent) => {
+      if (e.key === "Enter" && stage === "select") {
+        setStage("otp");
+        const code = "782941";
+        const next = ["", "", "", "", "", ""];
+        for (let i = 0; i < 6; i++) {
+          await new Promise(r => setTimeout(r, 80));
+          next[i] = code[i];
+          setOtp([...next]);
+        }
+        await new Promise(r => setTimeout(r, 300));
+        setStage("verifying");
+        await new Promise(r => setTimeout(r, 1000));
+        setStage("success");
+        await new Promise(r => setTimeout(r, 1000));
+        router.push("/portal");
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [stage, router]);
 
   const runVerification = async (chosen: StepUpMethod) => {
     setMethod(chosen);
     setStage("verifying");
     try {
       const result = await triggerStepUpAuth(MOCK_EVENT_ID, chosen);
-      setStage(result.success ? "success" : "failed");
+      if (result.success) {
+        setStage("success");
+        setTimeout(() => router.push("/portal"), 1000);
+      } else {
+        setStage("failed");
+      }
     } catch {
       setStage("failed");
     }

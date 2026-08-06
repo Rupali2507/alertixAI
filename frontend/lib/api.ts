@@ -78,6 +78,32 @@ export function subscribeToLiveFeed(
  */
 export type StepUpMethod = "otp" | "biometric" | "liveness";
 
+// Add near the other exports
+
+export interface KycScoreResult {
+  score: number;
+  confidence: number;
+  reason_codes: string[];
+  reason_code_weights: Record<string, number>;
+}
+
+/**
+ * Calls the real CatBoost + SHAP KYC detector for a single onboarding event.
+ * Population-level signals (PAN/phone/address reuse) are structurally
+ * invisible to single-event scoring — see ml/kyc_fraud/feature_engineering.py.
+ * This captures the burst/velocity pattern (rapid edits -> immediate txn),
+ * which IS a valid single-event signal.
+ */
+export async function scoreKycEvent(event: Record<string, any>): Promise<KycScoreResult> {
+  const res = await fetch(`${ORCHESTRATOR_BASE_URL}/score/kyc`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ event }),
+  });
+  if (!res.ok) throw new Error(`KYC scoring failed: ${res.status}`);
+  return res.json();
+}
+
 export async function triggerStepUpAuth(
   eventId: string,
   method: StepUpMethod

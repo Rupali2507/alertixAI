@@ -101,18 +101,43 @@ def build_kyc_fraud() -> dict:
 
 
 def build_insider_threat() -> dict:
-    """Large balance override, off-hours, support role -> rule engine + cohort IF both fire.
-    Mirrors docs/demo_scenarios.md Scenario 4 exactly."""
+    """Large balance override, off-hours -> rule engine + cohort IF both fire.
+    Using DEMO_USER to show same-session privilege misuse after step-up."""
     e = _base_event("admin_action")
     e.update({
-        "user_id": DEMO_ADMIN,
-        "device_id": "admin_device_4",
-        "ip_address": "10.1.0.55",
-        "timestamp": _iso(hour=22.75),
+        "user_id": DEMO_USER,
+        "device_id": DEMO_NEW_DEVICE,
+        "ip_address": DEMO_NEW_IP,
+        "timestamp": _iso(hour=2.5),
         "txn_amount": 75000,
         "admin_action_type": "balance_override",
         "admin_role": "support",
     })
+    return e
+
+def build_ratnesh_allow() -> dict:
+    e = _base_event("login")
+    e.update({"user_id": "ratnesh_anand", "ip_address": "103.15.22.1", "demo_scenario": "ratnesh_allow"}) # India IP
+    return e
+
+def build_ratnesh_block() -> dict:
+    e = _base_event("login")
+    e.update({"user_id": "ratnesh_anand", "ip_address": "198.51.100.5", "demo_scenario": "ratnesh_block"}) # VPN IP
+    return e
+
+def build_frequent_allow() -> dict:
+    e = _base_event("login")
+    e.update({"user_id": "frequent_user", "ip_address": "10.0.1.5", "demo_scenario": "frequent_allow"})
+    return e
+
+def build_frequent_block() -> dict:
+    e = _base_event("login")
+    e.update({"user_id": "frequent_user", "ip_address": "10.0.1.5", "demo_scenario": "frequent_block"})
+    return e
+
+def build_fraud_ring() -> dict:
+    e = _base_event("login")
+    e.update({"user_id": "fraud_ring_user", "ip_address": "185.15.5.5", "demo_scenario": "fraud_ring"})
     return e
 
 
@@ -121,6 +146,11 @@ SCENARIOS = {
     "impossible_travel": build_impossible_travel,
     "kyc_fraud": build_kyc_fraud,
     "insider_threat": build_insider_threat,
+    "ratnesh_allow": build_ratnesh_allow,
+    "ratnesh_block": build_ratnesh_block,
+    "frequent_allow": build_frequent_allow,
+    "frequent_block": build_frequent_block,
+    "fraud_ring": build_fraud_ring,
 }
 
 
@@ -136,3 +166,13 @@ async def simulate_attack(request: AttackSimulationRequest):
 
     await simulation_queue.put(event)
     return {"status": "Attack simulation injected successfully", "type": request.scenario}
+
+
+@router.post("/reset")
+async def reset_demo():
+    import glob, os
+    from backend.privacy.audit_log import AUDIT_LOG_DIR
+    for f in glob.glob(os.path.join(AUDIT_LOG_DIR, "audit_*.jsonl")):
+        open(f, "w").close()
+    await simulation_queue.put({"type": "reset"})
+    return {"status": "reset successful"}

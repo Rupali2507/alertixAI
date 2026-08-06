@@ -48,13 +48,12 @@ export default function KycFraudPage() {
     };
   }, []);
 
-  const handleFormSubmit = (input: ApplicationInput) => {
-    const next = evaluateApplication(input, "manual_submission");
-    setApplicants((prev) => [next, ...prev].slice(0, 16));
-    setSelectedId(next.applicantId);
-    setPinned(true);
-    setFormOpen(false);
-  };
+  const handleFormSubmit = (applicant: KycApplicant) => {
+  setApplicants((prev) => [applicant, ...prev].slice(0, 16));
+  setSelectedId(applicant.applicantId);
+  setPinned(true);
+  setFormOpen(false);
+};
 
   const backToLive = () => {
     setPinned(false);
