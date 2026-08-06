@@ -24,7 +24,10 @@ export default function KycFraudPage() {
   // any case that isn't a clean auto-approval stays on screen until you
   // explicitly move away from it — background traffic can never bump it
   useEffect(() => {
-    if (selected.decision !== "straight_through") setPinned(true);
+    const t = setTimeout(() => {
+      if (selected.decision !== "straight_through") setPinned(true);
+    }, 0);
+    return () => clearTimeout(t);
   }, [selected.decision]);
 
   useEffect(() => {
@@ -69,7 +72,7 @@ export default function KycFraudPage() {
             <h1 className="text-2xl font-medium text-ink mb-1">Identity Verification</h1>
             <p className="text-sm text-mist max-w-2xl">
               Every new application is checked against document, biometric, and data-validation signals,
-              then placed into the identity graph to see whether it's connected to a previously confirmed
+              then placed into the identity graph to see whether it&apos;s connected to a previously confirmed
               fraud case — even if the name, phone, and address are completely different.
             </p>
           </div>
@@ -102,7 +105,7 @@ export default function KycFraudPage() {
               <span className="text-xs font-mono text-mist">{selected.graph.nodes.length} connections traced</span>
             </div>
             <p className="text-xs text-mist mb-4">
-              This applicant's device, IP, and face match are checked against every past case. Red nodes
+              This applicant&apos;s device, IP, and face match are checked against every past case. Red nodes
               are confirmed fraud — a line connecting to one means shared infrastructure, not a shared name.
             </p>
             <IdentityGraphView graph={selected.graph} />
