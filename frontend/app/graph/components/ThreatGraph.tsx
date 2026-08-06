@@ -61,9 +61,12 @@ export default function ThreatGraph() {
   }, []);
 
   useEffect(() => {
-    fetchGraph();
+    const t0 = setTimeout(fetchGraph, 0);
     const t = setInterval(fetchGraph, REFRESH_MS);
-    return () => clearInterval(t);
+    return () => {
+      clearTimeout(t0);
+      clearInterval(t);
+    };
   }, [fetchGraph]);
 
   const nodesById = useMemo(() => {

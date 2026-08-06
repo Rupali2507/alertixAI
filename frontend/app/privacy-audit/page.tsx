@@ -22,15 +22,25 @@ export default function PrivacyAuditPage() {
   const [rows, setRows] = useState<AuditLogRow[]>([]);
 
   useEffect(() => {
-    setPoints(generatePrivacyAnalytics());
-    setCompliance(generateComplianceItems());
+    const t = setTimeout(() => {
+      setPoints(generatePrivacyAnalytics());
+      setCompliance(generateComplianceItems());
+    }, 0);
     
     // Fetch REAL audit logs from backend
     fetch("http://localhost:8000/audit")
       .then(res => res.json())
       .then(data => {
         if (data.logs && data.logs.length > 0) {
-          const realRows: AuditLogRow[] = data.logs.map((log: any) => ({
+          const realRows: AuditLogRow[] = data.logs.map((log: {
+            event_id: string;
+            user_id_hash: string;
+            decision: "APPROVE" | "REVIEW" | "REJECT";
+            fused_score: number;
+            reason_codes: string[];
+            timestamp: string;
+            policy_version: string;
+          }) => ({
             id: log.event_id,
             hmac: log.user_id_hash.substring(0, 8) + "..." + log.user_id_hash.slice(-4),
             decision: log.decision,
@@ -49,6 +59,7 @@ export default function PrivacyAuditPage() {
         setRows(generateAuditLogRows());
       });
       
+    return () => clearTimeout(t);
   }, []);
 
   return (
