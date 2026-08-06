@@ -47,17 +47,18 @@ export default function InsiderMisusePage() {
       <main className="p-6 space-y-6">
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-ink">Active Investigations</h1>
+            <p className="tracking-label text-[11px] text-brand mb-2">insider threat</p>
+            <h1 className="text-2xl font-medium text-ink">Active Investigations</h1>
             <p className="text-sm text-mist font-mono mt-1">
               Filtering: INTERNAL_THREAT_V2 | Window: Last 24H
             </p>
           </div>
           <div className="flex gap-2">
-            <button className="flex items-center gap-1.5 rounded-md border border-border bg-panel-2 px-3.5 py-2 text-sm text-mist hover:text-ink">
+            <button className="flex items-center gap-1.5 rounded-lg glass-card px-3.5 py-2 text-sm text-mist hover:text-ink">
               <Download size={14} />
               Export Report
             </button>
-            <button className="flex items-center gap-1.5 rounded-md bg-brand px-3.5 py-2 text-sm text-white font-medium hover:bg-brand/90">
+            <button className="flex items-center gap-1.5 rounded-lg bg-brand px-3.5 py-2 text-sm text-white font-medium hover:bg-brand/90">
               <Plus size={14} />
               New Case
             </button>

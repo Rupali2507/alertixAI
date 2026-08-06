@@ -15,10 +15,11 @@ const LABELS: Record<keyof SubScores, string> = {
   insiderMisuse: "Insider Misuse",
 };
 
+// Mirrors backend/orchestrator/config.py ThresholdConfig
 function colorFor(value: number): string {
-  if (value >= 75) return "#f87171"; // risk-high
-  if (value >= 40) return "#fbbf24"; // risk-mid
-  return "#34d399"; // risk-low
+  if (value >= 70) return "#FF6B85"; // risk-high
+  if (value >= 35) return "#F5B84D"; // risk-mid
+  return "#4ADE80"; // risk-low
 }
 
 export default function SubScoreBreakdown({ subScores }: SubScoreBreakdownProps) {
@@ -29,7 +30,7 @@ export default function SubScoreBreakdown({ subScores }: SubScoreBreakdownProps)
 
   return (
     <div>
-      <h3 className="text-sm font-semibold text-mist mb-2 tracking-wide uppercase text-xs">
+      <h3 className="text-sm font-medium text-mist mb-3 tracking-label text-[11px]">
         Sub-score Breakdown
       </h3>
       <div style={{ width: "100%", height: 200 }}>
@@ -40,22 +41,22 @@ export default function SubScoreBreakdown({ subScores }: SubScoreBreakdownProps)
               type="category"
               dataKey="name"
               width={100}
-              tick={{ fontSize: 12, fill: "#8892a4" }}
-              axisLine={{ stroke: "#212b38" }}
+              tick={{ fontSize: 12, fill: "#9B98AC" }}
+              axisLine={{ stroke: "#232330" }}
               tickLine={false}
             />
             <Tooltip
-              formatter={(value: number) => [`${value}`, "Score"]}
+              formatter={(value: any) => [`${value}`, "Score"]}
               contentStyle={{
-                background: "#131a24",
-                border: "1px solid #212b38",
-                borderRadius: 8,
+                background: "#1A1A21",
+                border: "1px solid #232330",
+                borderRadius: 10,
                 fontSize: 12,
-                color: "#e7ecf3",
+                color: "#F6F5FA",
               }}
-              cursor={{ fill: "#1a2230" }}
+              cursor={{ fill: "rgba(255,255,255,0.03)" }}
             />
-            <Bar dataKey="score" radius={[0, 4, 4, 0]} background={{ fill: "#1a2230" }}>
+            <Bar dataKey="score" radius={[0, 6, 6, 0]} background={{ fill: "rgba(255,255,255,0.04)" }}>
               {data.map((entry) => (
                 <Cell key={entry.name} fill={colorFor(entry.score)} />
               ))}

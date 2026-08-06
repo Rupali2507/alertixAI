@@ -2,14 +2,7 @@
 "use client";
 
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-  ReferenceLine,
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, ReferenceLine,
 } from "recharts";
 import { ReasonCode } from "@/lib/mockData";
 
@@ -23,11 +16,23 @@ export default function SHAPReasonCodes({ reasonCodes }: SHAPReasonCodesProps) {
     .map((r) => ({
       name: r.feature.replace(/_/g, " "),
       contribution: r.contribution,
+      hasWeight: r.contribution !== 0,
     }));
+
+  if (data.length === 0) {
+    return (
+      <div>
+        <h3 className="text-sm font-medium text-mist mb-3 tracking-label text-[11px]">
+          Reason Codes (SHAP)
+        </h3>
+        <p className="text-sm text-faint">No reason codes fired for this event.</p>
+      </div>
+    );
+  }
 
   return (
     <div>
-      <h3 className="text-sm font-semibold text-mist mb-2 tracking-wide uppercase text-xs">
+      <h3 className="text-sm font-medium text-mist mb-3 tracking-label text-[11px]">
         Reason Codes (SHAP)
       </h3>
       <div style={{ width: "100%", height: Math.max(160, data.length * 36) }}>
@@ -38,31 +43,28 @@ export default function SHAPReasonCodes({ reasonCodes }: SHAPReasonCodesProps) {
               type="category"
               dataKey="name"
               width={150}
-              tick={{ fontSize: 11, fill: "#8892a4" }}
-              axisLine={{ stroke: "#212b38" }}
+              tick={{ fontSize: 11, fill: "#9B98AC" }}
+              axisLine={{ stroke: "#232330" }}
               tickLine={false}
             />
-            <ReferenceLine x={0} stroke="#212b38" />
+            <ReferenceLine x={0} stroke="#232330" />
             <Tooltip
-              formatter={(value: number) => [
-                value.toFixed(2),
-                value > 0 ? "Increases risk" : "Decreases risk",
+              formatter={(value: any, _n: any, entry: any) => [
+                entry.payload.hasWeight ? value.toFixed(2) : "flagged (magnitude n/a)",
+                value >= 0 ? "Increases risk" : "Decreases risk",
               ]}
               contentStyle={{
-                background: "#131a24",
-                border: "1px solid #212b38",
-                borderRadius: 8,
+                background: "#1A1A21",
+                border: "1px solid #232330",
+                borderRadius: 10,
                 fontSize: 12,
-                color: "#e7ecf3",
+                color: "#F6F5FA",
               }}
-              cursor={{ fill: "#1a2230" }}
+              cursor={{ fill: "rgba(255,255,255,0.03)" }}
             />
             <Bar dataKey="contribution" radius={4}>
               {data.map((entry) => (
-                <Cell
-                  key={entry.name}
-                  fill={entry.contribution > 0 ? "#f87171" : "#34d399"}
-                />
+                <Cell key={entry.name} fill={entry.contribution > 0 ? "#FF6B85" : "#4ADE80"} />
               ))}
             </Bar>
           </BarChart>

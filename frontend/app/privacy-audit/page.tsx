@@ -24,7 +24,31 @@ export default function PrivacyAuditPage() {
   useEffect(() => {
     setPoints(generatePrivacyAnalytics());
     setCompliance(generateComplianceItems());
-    setRows(generateAuditLogRows());
+    
+    // Fetch REAL audit logs from backend
+    fetch("http://localhost:8000/audit")
+      .then(res => res.json())
+      .then(data => {
+        if (data.logs && data.logs.length > 0) {
+          const realRows: AuditLogRow[] = data.logs.map((log: any) => ({
+            id: log.event_id,
+            hmac: log.user_id_hash.substring(0, 8) + "..." + log.user_id_hash.slice(-4),
+            decision: log.decision,
+            fusedScore: Math.round(log.fused_score * 100),
+            reasonCodes: log.reason_codes,
+            timestamp: log.timestamp,
+            policyVersion: log.policy_version,
+          }));
+          setRows(realRows);
+        } else {
+          setRows(generateAuditLogRows()); // Fallback if empty
+        }
+      })
+      .catch(err => {
+        console.error("Failed to fetch real audit logs", err);
+        setRows(generateAuditLogRows());
+      });
+      
   }, []);
 
   return (
@@ -34,12 +58,13 @@ export default function PrivacyAuditPage() {
       <main className="p-6 space-y-6">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-ink">Privacy & Audit</h1>
+            <p className="tracking-label text-[11px] text-brand mb-2">privacy & audit</p>
+            <h1 className="text-2xl font-medium text-ink">Privacy & Audit</h1>
             <p className="text-sm text-mist mt-1">
               Managing the privacy layer, compliance mapping, and transparent audit trails.
             </p>
           </div>
-          <div className="flex items-center gap-2.5 rounded-lg border border-success/30 bg-success/5 px-4 py-2.5 shrink-0">
+          <div className="flex items-center gap-2.5 rounded-lg glass-card px-4 py-2.5 shrink-0">
             <ShieldCheck size={20} className="text-success" />
             <div>
               <p className="text-sm font-medium text-ink">Privacy Shield</p>

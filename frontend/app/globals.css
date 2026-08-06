@@ -1,28 +1,33 @@
-/* app/globals.css */
 @import "tailwindcss";
 
 @theme {
-  /* Surfaces */
-  --color-void: #02040A;      /* deep space background */
-  --color-sidebar: #050A14;   /* sidebar background */
-  --color-panel: #0A1121;     /* card / panel surface */
-  --color-panel-2: #10182B;   /* raised surface (hover, inputs, badges) */
-  --color-border: #1E293B;    /* hairline borders */
+  /* Surfaces — near-black, less saturated than pure void, reads as premium not sci-fi */
+  --color-void: #08080B;
+  --color-sidebar: #0A0A0E;
+  --color-panel: #131318;
+  --color-panel-2: #1A1A21;
+  --color-border: #232330;
 
   /* Text */
-  --color-ink: #F8FAFC;       /* primary text / headings */
-  --color-mist: #94A3B8;      /* secondary / muted text */
-  --color-faint: #475569;     /* tertiary / disabled text */
+  --color-ink: #F6F5FA;
+  --color-mist: #9B98AC;
+  --color-faint: #55536A;
 
-  /* Brand accent — Neon Cyan */
-  --color-brand: #06B6D4;
-  --color-brand-dim: rgba(6, 182, 212, 0.12);
+  /* Signature accent — deep violet, used with confidence (not neon cyan) */
+  --color-brand: #8B7CFF;
+  --color-brand-dim: rgba(139, 124, 255, 0.12);
+  --color-brand-glow: rgba(139, 124, 255, 0.35);
 
-  /* Semantic status */
-  --color-danger: #F43F5E;       /* Rose/Crimson */
-  --color-danger-solid: #E11D48;
-  --color-warning: #F59E0B;      /* Amber */
-  --color-success: #10B981;      /* Emerald */
+  /* Semantic status — same hues, slightly desaturated for premium feel */
+  --color-danger: #FF6B85;
+  --color-danger-solid: #E8385A;
+  --color-warning: #F5B84D;
+  --color-success: #4ADE80;
+
+  /* Risk aliases — ScoreCard.tsx already references these; previously undefined */
+  --color-risk-low: #4ADE80;
+  --color-risk-mid: #F5B84D;
+  --color-risk-high: #FF6B85;
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
@@ -34,9 +39,61 @@ html {
 
 body {
   font-family: var(--font-sans), system-ui, sans-serif;
+  font-feature-settings: "tnum" 1; /* tabular numerals everywhere scores render */
 }
 
 ::selection {
   background: var(--color-brand-dim);
   color: var(--color-ink);
+}
+
+/* ---- Premium surface utilities — depth via glass + gradient, not flat fills ---- */
+
+@layer utilities {
+  .glass-card {
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.01));
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .glass-card-strong {
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.015));
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .signature-glow {
+    box-shadow: 0 0 60px -12px var(--color-brand-glow);
+  }
+
+  .text-gradient-brand {
+    background: linear-gradient(120deg, #C9C1FF 0%, #8B7CFF 45%, #5B4FE0 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .tracking-label {
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .noise-bg {
+    background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.04) 1px, transparent 0);
+    background-size: 24px 24px;
+  }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-14px); }
+}
+
+@keyframes gauge-fill {
+  from { stroke-dashoffset: var(--gauge-circumference); }
 }

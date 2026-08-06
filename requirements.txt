@@ -25,3 +25,10 @@ threadpoolctl==3.6.0
 typing-inspection==0.4.2
 typing_extensions==4.16.0
 uvicorn==0.52.1
+
+# --- ML detector dependencies (previously missing — score.py/train_all.py
+#     silently fell back to sklearn-only mode without these) ---
+catboost==1.2.7
+shap==0.46.0
+torch==2.5.1
+torch-geometric==2.6.1

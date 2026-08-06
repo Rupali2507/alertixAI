@@ -121,3 +121,45 @@ class IdentityGraph:
         for e in events:
             self.add_event(e)
         return self
+
+    def export_graph(self, fanout_threshold: int = 8) -> dict:
+        """
+        Serializes the graph for display — the same structural signal
+        (degree / fan-out) that DeviceTrustDetector's guardrail bonus uses
+        in train.py, just exposed as data instead of only a risk delta.
+        """
+        reverse_index = {
+            node_type: {idx: key for key, idx in table.items()}
+            for node_type, table in self._node_index.items()
+        }
+
+        nodes = []
+        for node_type, table in self._node_index.items():
+            for key, idx in table.items():
+                deg = self.degree(node_type, key)
+                nodes.append({
+                    "id": f"{node_type}:{key}",
+                    "type": node_type,
+                    "label": key,
+                    "degree": deg,
+                    # mirrors FANOUT_RISK_THRESHOLD's meaning in train.py — a
+                    # device/IP touching an implausible number of otherwise-
+                    # unrelated users/devices is the device-farm signature
+                    "suspicious": node_type in ("device", "ip") and deg > fanout_threshold,
+                })
+
+        edges = []
+        for (src_type, rel, dst_type), edge_map in self._edges.items():
+            for (src_idx, dst_idx), weight in edge_map.items():
+                src_key = reverse_index[src_type].get(src_idx)
+                dst_key = reverse_index[dst_type].get(dst_idx)
+                if src_key is None or dst_key is None:
+                    continue
+                edges.append({
+                    "source": f"{src_type}:{src_key}",
+                    "target": f"{dst_type}:{dst_key}",
+                    "weight": weight,   # co-occurrence count — same signal graphsage_gat.py trains on
+                    "relation": rel,
+                })
+
+        return {"nodes": nodes, "edges": edges, "fanout_threshold": fanout_threshold}
