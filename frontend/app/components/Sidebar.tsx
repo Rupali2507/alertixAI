@@ -10,12 +10,14 @@ import {
   ActivitySquare,
   HelpCircle,
   FileText,
-  Network
+  Network,
+  IdCard
 } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Threat Monitor", icon: ShieldAlert },
   { href: "/graph", label: "3D Threat Graph", icon: Network },
+  { href: "/kyc-fraud", label: "KYC Fraud Graph", icon: IdCard },
   { href: "/insider-misuse", label: "Insider Misuse", icon: UserSearch },
   { href: "/privacy-audit", label: "Privacy & Audit", icon: ShieldCheck },
   { href: "/system-health", label: "System Health", icon: ActivitySquare },

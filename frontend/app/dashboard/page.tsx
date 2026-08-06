@@ -61,7 +61,13 @@ export default function ThreatMonitorPage() {
   const [selectedCase, setSelectedCase] = useState<CaseDetail | null>(null);
   const [trend, setTrend] = useState<{ behavioral: Dir; deviceTrust: Dir; kycInsider: Dir }>();
 
-  const startTimeRef = useRef(Date.now());
+  const [startTime] = useState(() => Date.now());
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 60000);
+    return () => clearInterval(t);
+  }, []);
   const prevSubScoresRef = useRef<SubScores | null>(null);
   const sinceLastTrendRef = useRef(0);
 
@@ -191,7 +197,7 @@ export default function ThreatMonitorPage() {
     return () => eventSource.close();
   }, []);
 
-  const elapsedHours = Math.max((Date.now() - startTimeRef.current) / 3_600_000, 0.0015);
+  const elapsedHours = Math.max((now - startTime) / 3_600_000, 0.0015);
   const eventsPerHour = Math.round(counts.total / elapsedHours);
   const allowPct = counts.total ? (counts.allow / counts.total) * 100 : 0;
   const stepUpPct = counts.total ? (counts.step_up / counts.total) * 100 : 0;

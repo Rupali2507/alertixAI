@@ -26,7 +26,7 @@ export default function AnomalousOriginsCard({ origin }: AnomalousOriginsCardPro
         <div className="relative flex items-center">
           <Info size={14} className="text-mist hover:text-ink cursor-help peer" />
           <div className="absolute left-6 w-56 p-2 bg-panel border border-border rounded text-xs text-mist opacity-0 peer-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-lg">
-            Most recent event flagged by the device-trust GNN's fan-out guardrail (device or IP shared across an unusually large number of accounts).
+            Most recent event flagged by the device-trust GNN&apos;s fan-out guardrail (device or IP shared across an unusually large number of accounts).
           </div>
         </div>
       </div>

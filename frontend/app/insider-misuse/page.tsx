@@ -26,10 +26,13 @@ export default function InsiderMisusePage() {
   const [actions, setActions] = useState<AdminAction[]>([]);
 
   useEffect(() => {
-    setPoints(generateSlidingWindow());
-    setThresholds(generateThresholdControls());
-    setAlerts(generateEscalatedAlerts());
-    setActions(generateAdminActions());
+    const t = setTimeout(() => {
+      setPoints(generateSlidingWindow());
+      setThresholds(generateThresholdControls());
+      setAlerts(generateEscalatedAlerts());
+      setActions(generateAdminActions());
+    }, 0);
+    return () => clearTimeout(t);
   }, []);
 
   if (!thresholds) {
