@@ -22,6 +22,7 @@ export default function LoginPage() {
   const [stage, setStage] = useState<Stage>("form");
   const [blockedInfo, setBlockedInfo] = useState<{ score: number; reasons: string[] } | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isDemo, setIsDemo] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,6 +31,14 @@ export default function LoginPage() {
 
     try {
       const result = await loginUser(userId, password);
+      setIsDemo(!!result.demo);
+
+      // If the orchestrator was unreachable, loginUser() already synthesized
+      // a demo decision. Pause briefly so the "Demo Mode" badge is actually
+      // seen instead of flashing past on the way to a redirect.
+      if (result.demo) {
+        await new Promise((r) => setTimeout(r, 900));
+      }
 
       if (result.decision === "block") {
         setBlockedInfo({ score: result.fused_score, reasons: result.reason_codes });
@@ -40,7 +49,8 @@ export default function LoginPage() {
       if (result.decision === "step_up") {
         // Reuse the existing step-up flow — pass context via query params
         // so /stepup can show why (fused_score) without a second fetch.
-        router.push(`/stepup?reason=login&score=${result.fused_score}`);
+        const demoParam = result.demo ? "&demo=1" : "";
+        router.push(`/stepup?reason=login&score=${result.fused_score}${demoParam}`);
         return;
       }
 
@@ -48,7 +58,7 @@ export default function LoginPage() {
       if (result.session_token) {
         window.localStorage.setItem("alertixai_session", result.session_token);
       }
-      router.push("/dashboard");
+      router.push(result.demo ? "/dashboard?demo=1" : "/dashboard");
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : "Login failed");
       setStage("error");
@@ -59,6 +69,7 @@ export default function LoginPage() {
     setStage("form");
     setBlockedInfo(null);
     setErrorMsg(null);
+    setIsDemo(false);
   };
 
   return (
@@ -70,6 +81,12 @@ export default function LoginPage() {
           </div>
           <h1 className="text-base font-semibold text-ink">Sign in</h1>
           <p className="text-xs text-mist mt-1">AlertixAI Identity Trust Framework</p>
+          {isDemo && (
+            <span className="mt-2 inline-flex items-center gap-1 rounded-full border border-warning/40 bg-warning/10 px-2.5 py-0.5 text-[10px] font-medium tracking-label text-warning">
+              <AlertTriangle size={10} />
+              Demo mode — orchestrator unreachable, showing simulated result
+            </span>
+          )}
         </div>
 
         {stage === "form" && (
@@ -109,7 +126,9 @@ export default function LoginPage() {
         {stage === "verifying" && (
           <div className="flex flex-col items-center py-8">
             <Loader2 size={28} className="text-brand animate-spin mb-3" />
-            <p className="text-sm text-mist">Verifying identity and login context…</p>
+            <p className="text-sm text-mist">
+              {isDemo ? "Simulating a decision (demo mode)…" : "Verifying identity and login context…"}
+            </p>
           </div>
         )}
 
