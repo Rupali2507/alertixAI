@@ -5,6 +5,8 @@
 // fraud portion of the identity graph (Layer 3) — in production this is
 // Neo4j; here it's a large in-memory table so the graph has real density
 // to match against.
+import { scoreKycEvent } from "./api";
+
 
 export type GraphNodeKind = "applicant" | "device" | "ip" | "face_cluster" | "bank_account";
 
@@ -71,7 +73,32 @@ export interface KycApplicant extends ApplicationInput {
   graph: KycGraph;
   timestamp: string;
   source: "live_intake" | "manual_submission";
+ liveModelScore?: number;       // real CatBoost probability, undefined if backend unreachable
+  liveModelReasonCodes?: string[]; // real SHAP-derived codes
+  liveModelSource: "backend" | "unavailable";
 }
+
+function eventPayloadFor(input: ApplicationInput, burstPattern: boolean): Record<string, any> {
+  return {
+    event_id: `kyc-demo-${Date.now()}`,
+    event_type: "onboarding",
+    user_id: `applicant_${Math.floor(Math.random() * 1e6)}`,
+    device_id: input.deviceId,
+    ip_address: input.ipAddress,
+    timestamp: new Date().toISOString(),
+    login_success: null,
+    txn_amount: null,
+    txn_currency: null,
+    beneficiary_id: null,
+    kyc_field_changed: "pan_number",
+    admin_action_type: null,
+    // burst-pattern fields the real model actually uses (feature_engineering.py)
+    kyc_edit_count_7d: burstPattern ? 5 : 0,
+    time_since_last_kyc_edit_hours: burstPattern ? 1.2 : 240,
+    rapid_kyc_to_txn: burstPattern,
+  };
+}
+
 
 interface SeedRecord {
   id: string;
@@ -286,6 +313,7 @@ export function evaluateApplication(input: ApplicationInput, source: KycApplican
     graph: { nodes, edges },
     timestamp: new Date().toISOString(),
     source,
+    liveModelSource: "unavailable",
   };
 }
 
@@ -321,6 +349,72 @@ export function generateAmbientApplication(): KycApplicant {
 export function seedInitialApplicants(): KycApplicant[] {
   return [generateAmbientApplication(), generateAmbientApplication(), generateAmbientApplication()];
 }
+
+export async function submitToIdentityGraphService(
+  input: ApplicationInput,
+  source: KycApplicant["source"],
+  burstPattern: boolean,
+  onStage?: (stage: string) => void
+): Promise<KycApplicant> {
+  onStage?.("Verifying document authenticity…");
+  await new Promise((r) => setTimeout(r, 350));
+
+  onStage?.("Running biometric + liveness match…");
+  await new Promise((r) => setTimeout(r, 300));
+
+  onStage?.("Scoring with live risk model…");
+  let liveModelScore: number | undefined;
+  let liveModelReasonCodes: string[] | undefined;
+  let liveModelSource: KycApplicant["liveModelSource"] = "unavailable";
+  try {
+    const result = await scoreKycEvent(eventPayloadFor(input, burstPattern));
+    liveModelScore = result.score;
+    liveModelReasonCodes = result.reason_codes;
+    liveModelSource = "backend";
+  } catch (e) {
+    console.warn("[kyc] live model unreachable, continuing with graph analysis only:", e);
+  }
+
+  onStage?.("Traversing identity graph…");
+  await new Promise((r) => setTimeout(r, 350));
+
+  const applicant = evaluateApplication(input, source);
+  return { ...applicant, liveModelScore, liveModelReasonCodes, liveModelSource };
+}
+
+// Small randomizers for scenario-generated applicants
+function randomName(): string {
+  return `${pick(CLEAN_FIRST)} ${pick(CLEAN_LAST)}`;
+}
+function randomPhone(): string {
+  return `9${Math.floor(100000000 + Math.random() * 899999999)}`;
+}
+function randomAddress(): string {
+  return pick(ADDR);
+}
+function randomDevice(): string {
+  return `dvc_${Math.floor(Math.random() * 1e5)}`;
+}
+function randomIp(): string {
+  return `${Math.floor(Math.random() * 223) + 1}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 254) + 1}`;
+}
+function randomFace(): string {
+  return `face_clu_${Math.floor(Math.random() * 1e5)}`;
+}
+
+export interface DemoScenario {
+  id: string;
+  label: string;
+  sub: string;
+  build: () => ApplicationInput;
+}
+
+export const KYC_DEMO_SCENARIOS: (DemoScenario & { burstPattern: boolean })[] = [
+  { id: "clean", label: "Clean applicant", sub: "No infrastructure overlap, no velocity flags", burstPattern: false, build: () => ({ name: randomName(), phone: randomPhone(), address: randomAddress(), deviceId: randomDevice(), ipAddress: randomIp(), faceRef: randomFace() }) },
+  { id: "device_match", label: "Shared device signature", sub: "Device fingerprint overlaps a confirmed ring", burstPattern: false, build: () => ({ name: randomName(), phone: randomPhone(), address: randomAddress(), deviceId: DEMO_MATCH_HINTS.device, ipAddress: randomIp(), faceRef: randomFace() }) },
+  { id: "burst_pattern", label: "Rapid edit + transaction burst", sub: "Live risk model flags edit-velocity pattern", burstPattern: true, build: () => ({ name: randomName(), phone: randomPhone(), address: randomAddress(), deviceId: randomDevice(), ipAddress: randomIp(), faceRef: randomFace() }) },
+  { id: "high_severity", label: "High-severity overlap", sub: "Device + biometric match, plus edit-burst pattern", burstPattern: true, build: () => ({ name: randomName(), phone: randomPhone(), address: randomAddress(), deviceId: DEMO_MATCH_HINTS.device, ipAddress: DEMO_MATCH_HINTS.ip, faceRef: DEMO_MATCH_HINTS.face }) },
+];
 
 // Reference values that WILL match the fraud history — useful while
 // rehearsing so you can reliably produce a flagged case on demand.

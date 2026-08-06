@@ -22,8 +22,14 @@ export default function ScoreBreakdownCard({ applicant }: { applicant: KycApplic
 
   return (
     <div className="rounded-xl border border-border bg-panel p-5">
-      <h2 className="text-base font-semibold text-ink mb-4">Composite Identity Trust Score</h2>
-
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-base font-semibold text-ink">Composite Identity Trust Score</h2>
+        {applicant.liveModelSource === "backend" ? (
+          <span className="text-[11px] font-medium text-success">● Live CatBoost inference · score {applicant.liveModelScore?.toFixed(3)}</span>
+        ) : (
+          <span className="text-[11px] font-medium text-faint">Graph analysis only (risk model offline)</span>
+        )}
+      </div>
       <div className="flex items-center gap-5 mb-5">
         <TrustGauge score={1 - applicant.trustScore} size={110} strokeWidth={9} label="trust score" />
         <div className="flex-1 space-y-3">
