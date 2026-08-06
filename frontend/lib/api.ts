@@ -120,3 +120,75 @@ export async function triggerStepUpAuth(
   if (!res.ok) throw new Error(`Step-up auth failed: ${res.status}`);
   return res.json();
 }
+
+/**
+ * Risk-based login. Hits POST /auth/login on the orchestrator, which runs
+ * behavioral + device_trust + login_trust (JA3 / geo-velocity / login
+ * frequency) and returns allow | step_up | block with ranked reason codes.
+ *
+ * device_id is a stable per-browser identifier (NOT a JA3 fingerprint —
+ * JA3 is computed server-side from the raw TLS handshake by the proxy in
+ * front of the orchestrator; the browser has no access to it). We persist
+ * a random UUID in localStorage so the same browser is recognized as the
+ * same "device" across logins, which is what device_trust's
+ * is_new_device signal depends on.
+ */
+export type LoginDecision = "allow" | "step_up" | "block";
+
+export interface LoginResult {
+  decision: LoginDecision;
+  fused_score: number;
+  reason_codes: string[];
+  session_token?: string;
+  challenge_hint?: string;
+}
+
+const DEVICE_ID_KEY = "alertixai_device_id";
+
+export function getOrCreateDeviceId(): string {
+  if (typeof window === "undefined") return "server";
+  let id = window.localStorage.getItem(DEVICE_ID_KEY);
+  if (!id) {
+    id = crypto.randomUUID();
+    window.localStorage.setItem(DEVICE_ID_KEY, id);
+  }
+  return id;
+}
+
+export async function loginUser(
+  userId: string,
+  password: string
+): Promise<LoginResult> {
+  if (USE_MOCK) {
+    await new Promise((r) => setTimeout(r, 900));
+    return { decision: "allow", fused_score: 0.12, reason_codes: [], session_token: "mock_session" };
+  }
+
+  const res = await fetch(`${ORCHESTRATOR_BASE_URL}/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      user_id: userId,
+      password,
+      device_id: getOrCreateDeviceId(),
+    }),
+  });
+
+  if (res.status === 401) {
+    throw new Error("Invalid credentials");
+  }
+  if (res.status === 403) {
+    const body = await res.json();
+    // FastAPI wraps our HTTPException detail dict under "detail"
+    const detail = body.detail ?? body;
+    return {
+      decision: "block",
+      fused_score: detail.fused_score,
+      reason_codes: detail.reason_codes ?? [],
+    };
+  }
+  if (!res.ok) {
+    throw new Error(`Login failed: ${res.status}`);
+  }
+  return res.json();
+}

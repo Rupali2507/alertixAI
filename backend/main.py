@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.routers import score, stepup_auth, feed, simulator, audit, graph
+from backend.routers import score, stepup_auth, feed, simulator, audit, graph, login_auth
 
 app = FastAPI(title="AlertixAI Orchestrator")
 
@@ -18,6 +18,7 @@ app.include_router(feed.router, tags=["live-feed"])
 app.include_router(simulator.router, tags=["simulator"])
 app.include_router(audit.router, tags=["audit"])
 app.include_router(graph.router, tags=["identity-graph"])
+app.include_router(login_auth.router, tags=["login-auth"])
 
 @app.get("/health")
 def health():
