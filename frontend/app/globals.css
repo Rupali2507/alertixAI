@@ -1,33 +1,43 @@
 @import "tailwindcss";
 
+:root {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --panel: #171717;
+  --panel-2: #262626;
+  --border: #333333;
+  --mist: #a3a3a3;
+  --faint: #525252;
+  --brand: #caff33;
+}
+
 @theme {
-  /* Surfaces — near-black, less saturated than pure void, reads as premium not sci-fi */
-  --color-void: #08080B;
-  --color-sidebar: #0A0A0E;
-  --color-panel: #131318;
-  --color-panel-2: #1A1A21;
-  --color-border: #232330;
+  --color-void: var(--background);
+  --color-sidebar: var(--background);
+  --color-panel: var(--panel);
+  --color-panel-2: var(--panel-2);
+  --color-border: var(--border);
 
   /* Text */
-  --color-ink: #F6F5FA;
-  --color-mist: #9B98AC;
-  --color-faint: #55536A;
+  --color-ink: var(--foreground);
+  --color-mist: var(--mist);
+  --color-faint: var(--faint);
 
-  /* Signature accent — deep violet, used with confidence (not neon cyan) */
-  --color-brand: #8B7CFF;
-  --color-brand-dim: rgba(139, 124, 255, 0.12);
-  --color-brand-glow: rgba(139, 124, 255, 0.35);
+  /* Signature accent - Lime Green */
+  --color-brand: var(--brand);
+  --color-brand-dim: rgba(202, 255, 51, 0.12);
+  --color-brand-glow: rgba(202, 255, 51, 0.35);
 
-  /* Semantic status — same hues, slightly desaturated for premium feel */
-  --color-danger: #FF6B85;
+  /* Semantic status */
+  --color-danger: #FF3B30;
   --color-danger-solid: #E8385A;
   --color-warning: #F5B84D;
-  --color-success: #4ADE80;
+  --color-success: var(--brand); /* Success matches lime theme */
 
-  /* Risk aliases — ScoreCard.tsx already references these; previously undefined */
-  --color-risk-low: #4ADE80;
+  /* Risk aliases */
+  --color-risk-low: var(--brand);
   --color-risk-mid: #F5B84D;
-  --color-risk-high: #FF6B85;
+  --color-risk-high: #FF3B30;
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
@@ -43,8 +53,8 @@ body {
 }
 
 ::selection {
-  background: var(--color-brand-dim);
-  color: var(--color-ink);
+  background: var(--brand);
+  color: #000000;
 }
 
 /* ---- Premium surface utilities — depth via glass + gradient, not flat fills ---- */
@@ -67,7 +77,7 @@ body {
   }
 
   .text-gradient-brand {
-    background: linear-gradient(120deg, #C9C1FF 0%, #8B7CFF 45%, #5B4FE0 100%);
+    background: linear-gradient(120deg, #e4ff80 0%, #caff33 45%, #9ec900 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;

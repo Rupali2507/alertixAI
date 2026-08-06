@@ -118,7 +118,7 @@ export default function StepUpPage() {
             <button
               disabled={otp.some((d) => d === "")}
               onClick={() => runVerification("otp")}
-              className="w-full rounded-md bg-brand text-white text-sm font-medium py-2.5 disabled:opacity-40"
+              className="w-full rounded-md bg-brand text-black text-sm font-medium py-2.5 disabled:opacity-40"
             >
               Verify
             </button>

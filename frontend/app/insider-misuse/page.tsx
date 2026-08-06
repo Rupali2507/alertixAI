@@ -58,7 +58,7 @@ export default function InsiderMisusePage() {
               <Download size={14} />
               Export Report
             </button>
-            <button className="flex items-center gap-1.5 rounded-lg bg-brand px-3.5 py-2 text-sm text-white font-medium hover:bg-brand/90">
+            <button className="flex items-center gap-1.5 rounded-lg bg-brand px-3.5 py-2 text-sm text-black font-medium hover:bg-brand/90">
               <Plus size={14} />
               New Case
             </button>

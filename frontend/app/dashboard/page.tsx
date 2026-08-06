@@ -12,6 +12,7 @@ import AnomalousOriginsCard, { FlaggedOrigin } from "./components/AnomalousOrigi
 import ScoreFusionCard from "./components/ScoreFusionCard";
 import CaseDrillDownPanel from "./components/CaseDrillDownPanel";
 import SimulatorButtons from "./components/SimulatorButtons";
+import TopBar from "../components/TopBar";
 
 const MAX_EVENTS = 8;
 const TREND_SAMPLE_EVERY = 6;
@@ -200,6 +201,7 @@ export default function ThreatMonitorPage() {
 
   return (
     <div className="min-h-screen">
+      <TopBar title="" searchPlaceholder="Search events, origin, user..." />
       <LiveFeedTicker events={events} />
 
       <main className="p-6 space-y-8">
