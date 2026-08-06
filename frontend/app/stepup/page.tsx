@@ -83,7 +83,7 @@ export default function StepUpPage() {
               <Fingerprint size={18} className="text-brand" />
               <div>
                 <p className="text-sm font-medium text-ink">Biometric (FIDO2)</p>
-                <p className="text-xs text-faint">Use your device's fingerprint sensor</p>
+                <p className="text-xs text-faint">Use your device&apos;s fingerprint sensor</p>
               </div>
             </button>
 
@@ -94,7 +94,7 @@ export default function StepUpPage() {
               <ScanFace size={18} className="text-brand" />
               <div>
                 <p className="text-sm font-medium text-ink">Liveness Check</p>
-                <p className="text-xs text-faint">Quick face scan to confirm it's you</p>
+                <p className="text-xs text-faint">Quick face scan to confirm it&apos;s you</p>
               </div>
             </button>
           </div>
@@ -154,7 +154,7 @@ export default function StepUpPage() {
           <div className="flex flex-col items-center py-6 text-center">
             <ShieldX size={32} className="text-danger mb-3" />
             <p className="text-sm font-semibold text-ink">Verification Failed</p>
-            <p className="text-xs text-mist mt-1 mb-4">We couldn't confirm your identity.</p>
+            <p className="text-xs text-mist mt-1 mb-4">We couldn&apos;t confirm your identity.</p>
             <button
               onClick={reset}
               className="rounded-md border border-border bg-panel-2 px-4 py-2 text-sm text-mist hover:text-ink"

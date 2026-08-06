@@ -37,7 +37,10 @@ export default function SystemHealthPage() {
     setContainers(generateContainerStatus());
   };
 
-  useEffect(refresh, []);
+  useEffect(() => {
+    const t = setTimeout(refresh, 0);
+    return () => clearTimeout(t);
+  }, []);
 
   if (!kafka || !fastApi || !featureStore) {
     return (
