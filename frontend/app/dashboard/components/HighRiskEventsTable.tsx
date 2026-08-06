@@ -29,7 +29,7 @@ function ActionBadge({ decision }: { decision: HighRiskEvent["decision"] }) {
       <Link
         href="/stepup"
         onClick={(e) => e.stopPropagation()}
-        className="rounded px-2.5 py-1 text-xs font-semibold bg-brand text-white hover:bg-brand/90"
+        className="rounded px-2.5 py-1 text-xs font-semibold bg-brand text-black hover:bg-brand/90"
       >
         STEP-UP
       </Link>

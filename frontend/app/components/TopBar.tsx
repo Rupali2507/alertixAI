@@ -61,10 +61,6 @@ export default function TopBar({
       </div>
 
       <div className="flex items-center gap-3 ml-auto">
-        <span className="flex items-center gap-1.5 rounded-full border border-success/30 bg-success/10 px-3 py-1 text-xs text-success font-mono">
-          <span className="h-1.5 w-1.5 rounded-full bg-success" />
-          Kafka Active
-        </span>
         <button className="text-mist hover:text-ink"><Bell size={17} /></button>
         <button className="text-mist hover:text-ink"><Settings size={17} /></button>
         <div className="h-8 w-8 rounded-full bg-panel-2 border border-border" />

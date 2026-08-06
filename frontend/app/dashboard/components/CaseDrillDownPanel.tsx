@@ -84,7 +84,7 @@ export default function CaseDrillDownPanel({ detail, onClose }: CaseDrillDownPan
               <button
                 onClick={handleStepUp}
                 disabled={stepUpStatus !== "idle"}
-                className="text-xs font-medium bg-brand text-white px-3 py-1.5 rounded-lg hover:bg-brand/90 transition-colors disabled:opacity-50"
+                className="text-xs font-medium bg-brand text-black px-3 py-1.5 rounded-lg hover:bg-brand/90 transition-colors disabled:opacity-50"
               >
                 {stepUpStatus === "idle" ? "Verify User (OTP)" : stepUpStatus === "loading" ? "Verifying..." : "Verified ✓"}
               </button>

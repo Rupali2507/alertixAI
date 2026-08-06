@@ -30,10 +30,7 @@ export default function Home() {
             <Link href="/privacy-audit" className="hover:text-ink transition-colors">Trust center</Link>
           </div>
           <div className="flex items-center gap-3">
-            <Link
-              href="/dashboard"
-              className="text-sm font-medium bg-ink text-void px-4 py-2 rounded-lg hover:bg-brand hover:text-white transition-all"
-            >
+            <Link href="/dashboard" className="text-sm font-bold bg-ink text-void px-5 py-2 rounded-lg hover:bg-brand hover:text-black transition-all">
               Launch console
             </Link>
           </div>
@@ -41,13 +38,6 @@ export default function Home() {
       </nav>
 
       <main className="flex-1 flex flex-col items-center relative z-10 px-6 pt-40 pb-24">
-        {/* Status badge */}
-        <div className="mb-8 flex items-center gap-2 rounded-full glass-card px-4 py-1.5 text-xs text-mist">
-          <span className="relative flex h-1.5 w-1.5">
-            <span className="absolute inline-flex h-full w-full rounded-full bg-brand" style={{ animation: "pulse-dot 2s ease-in-out infinite" }} />
-          </span>
-          <span className="tracking-label text-[10px] text-brand font-medium">v2.4 · orchestrator online</span>
-        </div>
 
         {/* Hero */}
         <h1 className="max-w-4xl text-center text-5xl md:text-6xl font-medium tracking-tight text-ink mb-6 leading-[1.08]">
@@ -64,7 +54,7 @@ export default function Home() {
         <div className="flex flex-col sm:flex-row gap-3 mb-24">
           <Link
             href="/dashboard"
-            className="group flex items-center justify-center gap-2 rounded-xl bg-ink text-void px-7 py-3.5 text-sm font-medium transition-all hover:bg-brand hover:text-white"
+            className="group flex items-center justify-center gap-3 rounded-xl bg-ink text-void px-8 py-4 text-base font-bold transition-all hover:bg-brand hover:text-black hover:shadow-[0_0_30px_rgba(202,255,51,0.2)]"
           >
             Enter console
             <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
@@ -134,8 +124,8 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="md:col-span-2 glass-card rounded-3xl p-8 relative overflow-hidden group hover:border-brand/30 transition-colors">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="glass-card rounded-3xl p-8 relative overflow-hidden group hover:border-brand/30 transition-colors">
               <Network className="text-brand mb-5" size={26} strokeWidth={1.5} />
               <h3 className="text-xl font-medium text-ink mb-2.5">Device trust graph</h3>
               <p className="text-mist text-sm leading-relaxed max-w-md">
@@ -170,7 +160,7 @@ export default function Home() {
               </Link>
             </div>
 
-            <div className="md:col-span-2 glass-card rounded-3xl p-8 flex flex-col justify-center relative overflow-hidden">
+            <div className="glass-card rounded-3xl p-8 flex flex-col justify-center relative overflow-hidden">
               <Lock className="text-brand mb-5" size={26} strokeWidth={1.5} />
               <h3 className="text-xl font-medium text-ink mb-2.5">Frictionless step-up</h3>
               <p className="text-mist text-sm leading-relaxed max-w-lg mb-5">
