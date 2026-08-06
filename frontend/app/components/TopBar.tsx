@@ -17,25 +17,25 @@ export default function TopBar({
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-50 flex items-center gap-6 border-b border-border bg-void/80 backdrop-blur-md px-6 py-3 shadow-sm">
+    <header className="sticky top-0 z-50 flex items-center gap-6 glass-card border-x-0 border-t-0 px-6 py-3">
       <Link href="/" className="flex items-center gap-2 text-brand hover:text-brand/80 transition-colors">
         <Home size={18} />
-        <span className="font-bold tracking-tight">AlertixAI</span>
+        <span className="font-medium tracking-tight">AlertixAI</span>
       </Link>
 
       <div className="h-4 w-px bg-border" />
 
       <nav className="flex items-center gap-1">
-        <Link 
+        <Link
           href="/dashboard"
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${pathname === '/dashboard' ? 'bg-brand/10 text-brand' : 'text-mist hover:text-ink hover:bg-panel-2'}`}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${pathname === '/dashboard' ? 'bg-brand-dim text-brand' : 'text-mist hover:text-ink hover:bg-panel-2'}`}
         >
           <LayoutDashboard size={16} />
           SOC Dashboard
         </Link>
-        <Link 
+        <Link
           href="/graph"
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${pathname === '/graph' ? 'bg-brand/10 text-brand' : 'text-mist hover:text-ink hover:bg-panel-2'}`}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${pathname === '/graph' ? 'bg-brand-dim text-brand' : 'text-mist hover:text-ink hover:bg-panel-2'}`}
         >
           <Network size={16} />
           3D Threat Graph
@@ -50,7 +50,7 @@ export default function TopBar({
       )}
 
       <div className="flex-1 flex items-center justify-end gap-2 max-w-md ml-auto">
-        <div className="flex items-center gap-2 rounded-md border border-border bg-panel px-3 py-1.5 w-full">
+        <div className="flex items-center gap-2 rounded-lg glass-card px-3 py-1.5 w-full">
           <Search size={14} className="text-faint" />
           <input
             type="text"
@@ -65,12 +65,8 @@ export default function TopBar({
           <span className="h-1.5 w-1.5 rounded-full bg-success" />
           Kafka Active
         </span>
-        <button className="text-mist hover:text-ink">
-          <Bell size={17} />
-        </button>
-        <button className="text-mist hover:text-ink">
-          <Settings size={17} />
-        </button>
+        <button className="text-mist hover:text-ink"><Bell size={17} /></button>
+        <button className="text-mist hover:text-ink"><Settings size={17} /></button>
         <div className="h-8 w-8 rounded-full bg-panel-2 border border-border" />
       </div>
     </header>

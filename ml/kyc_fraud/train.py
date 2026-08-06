@@ -71,8 +71,17 @@ class KYCFraudDetector(BaseDetector):
 
         x_row = X[0]
         score = float(self.model.predict_proba(x_row.reshape(1, -1))[0])
-        reason_codes = self.explainer.top_reason_codes(x_row) if self.explainer else []
-        return DetectorScore(score=round(score, 3), confidence=0.95, reason_codes=reason_codes)
+        reason_codes: list[str] = []
+        weights: dict[str, float] = {}
+        if self.explainer:
+            reason_codes = self.explainer.top_reason_codes(x_row)
+            full = self.explainer.full_attribution(x_row)  # raw_feature_name -> signed SHAP value
+            from ml.kyc_fraud.shap_explainer import HUMAN_READABLE
+            for raw_name, val in full.items():
+                code = HUMAN_READABLE.get(raw_name, raw_name)
+                if code in reason_codes:
+                    weights[code] = round(float(val), 4)
+        return DetectorScore(score=round(score, 3), confidence=0.95, reason_codes=reason_codes, reason_code_weights=weights)
 
     def save(self, path: str) -> None:
         os.makedirs(path, exist_ok=True)

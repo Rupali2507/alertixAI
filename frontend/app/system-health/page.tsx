@@ -54,14 +54,15 @@ export default function SystemHealthPage() {
       <main className="p-6 space-y-6">
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-ink">Infrastructure Telemetry</h1>
+            <p className="tracking-label text-[11px] text-brand mb-2">infrastructure</p>
+            <h1 className="text-2xl font-medium text-ink">Infrastructure Telemetry</h1>
             <p className="text-sm text-mist mt-1">
               Real-time health and performance metrics across the data plane.
             </p>
           </div>
           <button
             onClick={refresh}
-            className="flex items-center gap-1.5 rounded-md border border-border bg-panel-2 px-3.5 py-2 text-sm text-mist hover:text-ink"
+            className="flex items-center gap-1.5 rounded-lg glass-card px-3.5 py-2 text-sm text-mist hover:text-ink"
           >
             <RefreshCw size={14} />
             Refresh

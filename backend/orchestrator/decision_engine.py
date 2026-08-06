@@ -45,9 +45,6 @@ def build_decision(sub_scores: dict[str, DetectorScore]) -> FusedScore:
     fused = fuse_scores(sub_scores)
     decision = decide(fused)
 
-    # De-duplicated, severity-ranked, human-readable reason codes — this is
-    # what makes the dashboard show "Login at an unusual time for this user"
-    # instead of the raw machine code "unusual_login_time".
     ranked = aggregate_reason_codes(sub_scores)
     reason_codes = [r["description"] for r in ranked]
 
@@ -56,4 +53,5 @@ def build_decision(sub_scores: dict[str, DetectorScore]) -> FusedScore:
         sub_scores=sub_scores,
         decision=decision,
         reason_codes=reason_codes,
+        reason_code_details=ranked,
     )

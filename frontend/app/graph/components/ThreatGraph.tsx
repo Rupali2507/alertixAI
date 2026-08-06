@@ -1,139 +1,186 @@
+// app/graph/components/ThreatGraph.tsx
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
-// Dynamically import ForceGraph3D to avoid SSR issues with window/document
-const ForceGraph3D = dynamic(() => import("react-force-graph-3d"), { ssr: false });
 import * as THREE from "three";
+import { RefreshCw, AlertTriangle } from "lucide-react";
+import NodeDetailPanel, { GraphNode, GraphEdge } from "./NodeDetailPanel";
 
-interface GraphData {
-  nodes: { id: string; group: number; val: number; name: string }[];
-  links: { source: string; target: string; value: number }[];
+const ForceGraph3D = dynamic(() => import("react-force-graph-3d"), { ssr: false });
+
+const ORCHESTRATOR_BASE_URL = process.env.NEXT_PUBLIC_ORCHESTRATOR_URL ?? "http://localhost:8000";
+const REFRESH_MS = 30000; // full rebuild is O(events) server-side — don't hammer it
+
+interface GraphPayload {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+  fanout_threshold: number;
+  event_count: number;
 }
 
+const TYPE_COLOR = { user: "#8B7CFF", device: "#C9C1FF", ip: "#F5B84D" };
+const SUSPICIOUS_COLOR = "#FF6B85";
+
 export default function ThreatGraph() {
-  const [data, setData] = useState<GraphData | null>(null);
+  const [payload, setPayload] = useState<GraphPayload | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const fgRef = useRef<any>(null);
 
-  useEffect(() => {
-    // Generate a mock dense graph that looks impressive for the GNN visualization
-    const gData: GraphData = { nodes: [], links: [] };
-    const nodeCount = 150;
-    
-    // 0: User (Neon Cyan), 1: Device (Purple), 2: IP (Amber)
-    for (let i = 0; i < nodeCount; i++) {
-      const group = i % 10 === 0 ? 0 : i % 3 === 0 ? 1 : 2;
-      gData.nodes.push({
-        id: `id${i}`,
-        group,
-        val: group === 0 ? 5 : group === 1 ? 3 : 2, // Size based on type
-        name: group === 0 ? `User_${i}` : group === 1 ? `Device_hash_${i}` : `IP_192.168.1.${i}`
-      });
+  const fetchGraph = useCallback(async () => {
+    try {
+      const res = await fetch(`${ORCHESTRATOR_BASE_URL}/graph/identity`);
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.detail ?? `Failed to load graph: ${res.status}`);
+      }
+      const data: GraphPayload = await res.json();
+      setPayload(data);
+      setError(null);
+    } catch (e: any) {
+      setError(e.message ?? "Failed to load identity graph");
     }
-
-    // Connect them (create some dense clusters to simulate fraud rings)
-    for (let i = 0; i < nodeCount * 1.5; i++) {
-      const source = `id${Math.floor(Math.random() * (nodeCount / 2))}`;
-      const target = `id${Math.floor(Math.random() * nodeCount)}`;
-      gData.links.push({ source, target, value: 1 });
-    }
-    
-    // Add a specific highly connected fraud ring
-    for(let i = 0; i < 15; i++) {
-        gData.links.push({ source: 'id0', target: `id${130 + i}`, value: 2 });
-    }
-
-    setData(gData);
   }, []);
 
-  const handleClick = useCallback((node: any) => {
-    // Aim at node from outside it
-    const distance = 40;
-    const distRatio = 1 + distance/Math.hypot(node.x, node.y, node.z);
-    
-    fgRef.current?.cameraPosition(
-      { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio }, // new position
-      node, // lookAt ({ x, y, z })
-      3000  // ms transition duration
-    );
-  }, [fgRef]);
+  useEffect(() => {
+    fetchGraph();
+    const t = setInterval(fetchGraph, REFRESH_MS);
+    return () => clearInterval(t);
+  }, [fetchGraph]);
 
-  if (!data) return <div className="flex-1 flex items-center justify-center text-mist font-mono animate-pulse">Initializing WebGL Neural Matrix...</div>;
+  const nodesById = useMemo(() => {
+    const m = new Map<string, GraphNode>();
+    payload?.nodes.forEach((n) => m.set(n.id, n));
+    return m;
+  }, [payload]);
+
+  const graphData = useMemo(() => {
+    if (!payload) return { nodes: [], links: [] };
+    return {
+      nodes: payload.nodes.map((n) => ({ ...n })),
+      links: payload.edges.map((e) => ({ source: e.source, target: e.target, value: e.weight })),
+    };
+  }, [payload]);
+
+  const handleClick = useCallback((node: any) => {
+    setSelectedId(node.id);
+    const distance = 40;
+    const distRatio = 1 + distance / Math.hypot(node.x, node.y, node.z);
+    fgRef.current?.cameraPosition(
+      { x: node.x * distRatio, y: node.y * distRatio, z: node.z * distRatio },
+      node,
+      1500
+    );
+  }, []);
+
+  const focusOn = useCallback((id: string) => {
+    const node = (graphData.nodes as any[]).find((n) => n.id === id);
+    if (node) handleClick(node);
+    else setSelectedId(id);
+  }, [graphData, handleClick]);
+
+  if (error) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center px-6">
+        <AlertTriangle className="text-warning" size={28} />
+        <p className="text-sm text-mist max-w-md">{error}</p>
+        <button
+          onClick={fetchGraph}
+          className="flex items-center gap-1.5 rounded-lg glass-card px-3.5 py-2 text-sm text-mist hover:text-ink"
+        >
+          <RefreshCw size={13} /> Retry
+        </button>
+      </div>
+    );
+  }
+
+  if (!payload) {
+    return (
+      <div className="flex-1 flex items-center justify-center text-mist font-mono animate-pulse">
+        Loading identity graph…
+      </div>
+    );
+  }
+
+  if (payload.nodes.length === 0) {
+    return (
+      <div className="flex-1 flex items-center justify-center text-mist text-sm">
+        No events in the feature store yet — run <code className="text-brand mx-1">scripts/seed_and_train.py</code> or start the live feed.
+      </div>
+    );
+  }
+
+  const selectedNode = selectedId ? nodesById.get(selectedId) ?? null : null;
+  const suspiciousCount = payload.nodes.filter((n) => n.suspicious).length;
 
   return (
     <div className="flex-1 w-full relative overflow-hidden bg-void cursor-crosshair">
-      {/* Dynamic ambient background gradient */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-brand/10 via-void to-void z-0 pointer-events-none"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-brand/10 via-void to-void z-0 pointer-events-none" />
 
       <ForceGraph3D
         ref={fgRef}
-        graphData={data}
-        nodeLabel="name"
+        graphData={graphData}
+        nodeLabel={(n: any) => `${n.type}: ${n.label}${n.suspicious ? " ⚠ flagged" : ""}`}
         nodeRelSize={6}
         nodeResolution={32}
-        
-        // Custom Node Material for a glassy/glowing aesthetic
         nodeThreeObject={(node: any) => {
-          const color = node.group === 0 ? "#00f0ff" : node.group === 1 ? "#b026ff" : "#ffb400";
-          const size = node.group === 0 ? 6 : node.group === 1 ? 4 : 3;
-          
+          const color = node.suspicious ? SUSPICIOUS_COLOR : TYPE_COLOR[node.type as keyof typeof TYPE_COLOR];
+          const size = node.type === "user" ? 5.5 : node.type === "device" ? 4 : 3;
           return new THREE.Mesh(
             new THREE.SphereGeometry(size, 32, 32),
             new THREE.MeshPhysicalMaterial({
-              color: color,
-              emissive: color,
-              emissiveIntensity: 0.5,
-              roughness: 0.2,
-              metalness: 0.8,
-              transparent: true,
-              opacity: 0.9,
-              clearcoat: 1.0,
-              clearcoatRoughness: 0.1
+              color, emissive: color, emissiveIntensity: node.suspicious ? 0.85 : 0.45,
+              roughness: 0.2, metalness: 0.8, transparent: true, opacity: 0.92,
+              clearcoat: 1.0, clearcoatRoughness: 0.1,
             })
           );
         }}
-
-        // Thin, elegant edges
-        linkWidth={0.5}
-        linkOpacity={0.15}
+        linkWidth={(l: any) => Math.min(0.4 + l.value * 0.15, 2.5)}
+        linkOpacity={0.18}
         linkColor={() => "rgba(255, 255, 255, 1)"}
-        
-        // Flowing data particles! (This makes it look incredibly high-tech)
-        linkDirectionalParticles={2}
-        linkDirectionalParticleWidth={1.5}
-        linkDirectionalParticleSpeed={0.005}
-        linkDirectionalParticleColor={(link: any) => {
-            const sourceNode = typeof link.source === 'object' ? link.source : data.nodes.find(n => n.id === link.source);
-            return sourceNode?.group === 0 ? "#00f0ff" : sourceNode?.group === 1 ? "#b026ff" : "#ffb400";
-        }}
-
-        backgroundColor="rgba(0,0,0,0)" // Transparent to let CSS gradient show
+        linkDirectionalParticles={1}
+        linkDirectionalParticleWidth={1.4}
+        linkDirectionalParticleSpeed={0.004}
+        backgroundColor="rgba(0,0,0,0)"
         onNodeClick={handleClick}
       />
-      
-      {/* Legend overlay */}
-      <div className="absolute bottom-8 left-8 p-5 rounded-2xl border border-white/5 bg-black/40 backdrop-blur-xl shadow-2xl pointer-events-none z-10">
-        <h3 className="text-xs font-bold text-white/80 mb-4 uppercase tracking-[0.2em]">Neural Graph Legend</h3>
+
+      <NodeDetailPanel
+        node={selectedNode}
+        edges={payload.edges}
+        nodesById={nodesById}
+        fanoutThreshold={payload.fanout_threshold}
+        onClose={() => setSelectedId(null)}
+        onSelectNeighbor={focusOn}
+      />
+
+      <div className="absolute bottom-8 left-8 p-5 rounded-2xl glass-card-strong pointer-events-none z-10">
+        <h3 className="text-xs font-medium text-white/80 mb-1 tracking-label">Identity Graph</h3>
+        <p className="text-[10px] text-white/40 mb-4 font-mono">
+          {payload.event_count} events · {payload.nodes.length} nodes · {suspiciousCount} flagged
+        </p>
         <div className="space-y-3">
-          <div className="flex items-center gap-3">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#00f0ff] shadow-[0_0_12px_#00f0ff]" />
-            <span className="text-sm font-medium text-white/70">User Entity</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#b026ff] shadow-[0_0_12px_#b026ff]" />
-            <span className="text-sm font-medium text-white/70">Device Fingerprint</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#ffb400] shadow-[0_0_12px_#ffb400]" />
-            <span className="text-sm font-medium text-white/70">IP Origin</span>
-          </div>
+          {[
+            { color: TYPE_COLOR.user, label: "User" },
+            { color: TYPE_COLOR.device, label: "Device" },
+            { color: TYPE_COLOR.ip, label: "IP Origin" },
+            { color: SUSPICIOUS_COLOR, label: `Fan-out flagged (>${payload.fanout_threshold})` },
+          ].map((l) => (
+            <div key={l.label} className="flex items-center gap-3">
+              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: l.color, boxShadow: `0 0 12px ${l.color}` }} />
+              <span className="text-sm font-medium text-white/70">{l.label}</span>
+            </div>
+          ))}
         </div>
       </div>
-      
-      {/* Interaction hint overlay */}
-      <div className="absolute bottom-8 right-8 px-4 py-2 rounded-full border border-white/10 bg-black/40 backdrop-blur-xl pointer-events-none z-10">
-        <p className="text-[10px] text-white/50 font-mono tracking-widest uppercase">Click Node to Focus • Scroll to Zoom</p>
-      </div>
+
+      <button
+        onClick={fetchGraph}
+        className="absolute bottom-8 right-8 flex items-center gap-1.5 px-4 py-2 rounded-full glass-card-strong pointer-events-auto z-10 text-[11px] text-white/60 hover:text-white/90 transition-colors"
+      >
+        <RefreshCw size={12} /> Refresh
+      </button>
     </div>
   );
 }

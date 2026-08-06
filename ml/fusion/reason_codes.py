@@ -58,7 +58,10 @@ _HUMAN_READABLE = {
 def aggregate_reason_codes(sub_scores: dict[str, DetectorScore], top_k: int = 5) -> list[dict]:
     """
     Returns ranked, de-duplicated, human-readable reason codes:
-      [{"code": ..., "detector": ..., "detector_score": ..., "description": ...}, ...]
+      [{"code", "detector", "detector_score", "description", "contribution"}, ...]
+    "contribution" is the detector's signed weight for that code if it supplied
+    one (currently only kyc/SHAP does); otherwise None — callers must not
+    treat None as zero.
     """
     seen: dict[str, dict] = {}
     for detector_name, s in sub_scores.items():
@@ -71,6 +74,7 @@ def aggregate_reason_codes(sub_scores: dict[str, DetectorScore], top_k: int = 5)
                     "detector": detector_name,
                     "detector_score": s.score,
                     "description": _HUMAN_READABLE.get(code, code.replace("_", " ").capitalize()),
+                    "contribution": s.reason_code_weights.get(raw_code),
                 }
 
     ranked = sorted(seen.values(), key=lambda e: (e["detector_score"], _SEVERITY_PRIOR.get(e["code"], 0)), reverse=True)

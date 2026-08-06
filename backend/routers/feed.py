@@ -57,14 +57,16 @@ async def live_event_generator():
         # Convert Pydantic models to dict to avoid serialization issues
         fused_result_dict = result.dict() if hasattr(result, "dict") else result.model_dump()
         
-        # Build LLM Investigator Report (Real logic based on true signals)
+        # Build LLM Investigator Report from real signals only
         investigator_report = f"Identity investigation initiated for {short_hmac}. "
-        if sub_scores["kyc"].score > 0.7:
-            investigator_report += f"Location anomaly detected (IP: {raw_event.get('ip_address', 'Unknown')}). "
-        if sub_scores["behavioral"].score > 0.7:
-            investigator_report += f"Typing cadence deviates by {int(raw_event.get('typing_cadence_score', 0) * 100)}% from baseline. Mouse movement indicates potential bot activity. "
+        if sub_scores["kyc"].score > 0.7 and sub_scores["kyc"].reason_codes:
+            investigator_report += f"KYC signals: {', '.join(sub_scores['kyc'].reason_codes)}. "
+        if sub_scores["behavioral"].score > 0.7 and sub_scores["behavioral"].reason_codes:
+            investigator_report += f"Behavioral deviation driven by: {', '.join(sub_scores['behavioral'].reason_codes)}. "
         if sub_scores["device_trust"].score > 0.7:
-            investigator_report += f"Device {raw_event.get('device_id')} has low familiarity. Graph analysis shows interactions with historically flagged networks. "
+            investigator_report += f"Device {raw_event.get('device_id')} shows low structural trust in the identity graph. "
+            if sub_scores["device_trust"].reason_codes:
+                investigator_report += f"Flags: {', '.join(sub_scores['device_trust'].reason_codes)}. "
         if result.decision == "block":
             investigator_report += "Combined evidence suggests high probability of account takeover. Action: Immediate Block."
         elif result.decision == "step_up":

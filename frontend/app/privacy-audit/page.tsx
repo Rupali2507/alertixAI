@@ -58,12 +58,13 @@ export default function PrivacyAuditPage() {
       <main className="p-6 space-y-6">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-ink">Privacy & Audit</h1>
+            <p className="tracking-label text-[11px] text-brand mb-2">privacy & audit</p>
+            <h1 className="text-2xl font-medium text-ink">Privacy & Audit</h1>
             <p className="text-sm text-mist mt-1">
               Managing the privacy layer, compliance mapping, and transparent audit trails.
             </p>
           </div>
-          <div className="flex items-center gap-2.5 rounded-lg border border-success/30 bg-success/5 px-4 py-2.5 shrink-0">
+          <div className="flex items-center gap-2.5 rounded-lg glass-card px-4 py-2.5 shrink-0">
             <ShieldCheck size={20} className="text-success" />
             <div>
               <p className="text-sm font-medium text-ink">Privacy Shield</p>
