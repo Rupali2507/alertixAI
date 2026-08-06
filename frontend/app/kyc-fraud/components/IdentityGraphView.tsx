@@ -180,6 +180,9 @@ export default function IdentityGraphView({ graph }: { graph: KycGraph }) {
           Confirmed fraud case
         </span>
       </div>
+      <p className="mt-3 px-1 text-[11px] text-faint italic">
+        Names shown for document verification only — downstream systems reference the hashed identity.
+      </p>
     </div>
   );
 }

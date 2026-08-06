@@ -49,7 +49,7 @@ export default function ApplicantQueueTable({
             >
               <td className="py-2.5">
                 <p className="text-ink font-medium">{a.name}</p>
-                <p className="text-[11px] text-faint font-mono">{a.applicantId}</p>
+                <p className="text-[11px] text-faint font-mono">{a.hashedId}</p>
               </td>
               <td className="py-2.5 font-mono text-ink">{a.trustScore.toFixed(2)}</td>
               <td className="py-2.5 font-mono text-mist">{a.graphFraudScore.toFixed(2)}</td>

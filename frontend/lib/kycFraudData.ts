@@ -8,6 +8,19 @@
 import { scoreKycEvent } from "./api";
 
 
+/** Deterministic, illustrative pseudonym — mirrors backend/privacy/hashing.py's
+ *  HMAC output format (8 hex...4 hex) so the same applicant maps consistently
+ *  to the same "identity" a viewer would see elsewhere (audit log, dashboard). */
+function pseudonymize(seed: string): string {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) {
+    h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+  }
+  const hex = h.toString(16).padStart(8, "0");
+  return `${hex.slice(0, 8)}...${hex.slice(4, 8)}`;
+}
+
+
 export type GraphNodeKind = "applicant" | "device" | "ip" | "face_cluster" | "bank_account";
 
 export type EdgeRelation =
@@ -76,13 +89,14 @@ export interface KycApplicant extends ApplicationInput {
  liveModelScore?: number;       // real CatBoost probability, undefined if backend unreachable
   liveModelReasonCodes?: string[]; // real SHAP-derived codes
   liveModelSource: "backend" | "unavailable";
+  hashedId: string;
 }
 
-function eventPayloadFor(input: ApplicationInput, burstPattern: boolean): Record<string, any> {
+function eventPayloadFor(input: ApplicationInput, burstPattern: boolean, hashedId: string): Record<string, any> {
   return {
     event_id: `kyc-demo-${Date.now()}`,
     event_type: "onboarding",
-    user_id: `applicant_${Math.floor(Math.random() * 1e6)}`,
+    user_id: hashedId,
     device_id: input.deviceId,
     ip_address: input.ipAddress,
     timestamp: new Date().toISOString(),
@@ -314,6 +328,7 @@ export function evaluateApplication(input: ApplicationInput, source: KycApplican
     timestamp: new Date().toISOString(),
     source,
     liveModelSource: "unavailable",
+    hashedId: pseudonymize(input.name),
   };
 }
 
@@ -366,8 +381,9 @@ export async function submitToIdentityGraphService(
   let liveModelScore: number | undefined;
   let liveModelReasonCodes: string[] | undefined;
   let liveModelSource: KycApplicant["liveModelSource"] = "unavailable";
+  const hashedId = pseudonymize(input.name);
   try {
-    const result = await scoreKycEvent(eventPayloadFor(input, burstPattern));
+    const result = await scoreKycEvent(eventPayloadFor(input, burstPattern, hashedId));
     liveModelScore = result.score;
     liveModelReasonCodes = result.reason_codes;
     liveModelSource = "backend";
