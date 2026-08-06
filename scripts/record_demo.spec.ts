@@ -9,33 +9,33 @@ test('record end-to-end alertix demo', async ({ page, request }) => {
   
   // 1. Reset demo state
   console.log("Resetting demo...");
-  await request.post('http://localhost:8000/reset');
+  await request.post('http://localhost:8001/reset');
   await page.waitForTimeout(3000);
 
   // 2. Baseline login
   console.log("Simulating baseline login...");
-  await request.post('http://localhost:8000/simulate', {
+  await request.post('http://localhost:8001/simulate', {
     data: { scenario: 'normal' }
   });
   await page.waitForTimeout(5000);
   
   // 3. Anomalous login
   console.log("Simulating impossible travel...");
-  await request.post('http://localhost:8000/simulate', {
+  await request.post('http://localhost:8001/simulate', {
     data: { scenario: 'impossible_travel' }
   });
   await page.waitForTimeout(5000);
 
   // 4. Post-login privilege misuse (same session)
   console.log("Simulating insider threat...");
-  await request.post('http://localhost:8000/simulate', {
+  await request.post('http://localhost:8001/simulate', {
     data: { scenario: 'insider_threat' }
   });
   await page.waitForTimeout(5000);
 
   // 5. KYC fraud
   console.log("Simulating KYC fraud...");
-  await request.post('http://localhost:8000/simulate', {
+  await request.post('http://localhost:8001/simulate', {
     data: { scenario: 'kyc_fraud' }
   });
   await page.waitForTimeout(5000);

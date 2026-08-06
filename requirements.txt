@@ -30,5 +30,6 @@ uvicorn==0.52.1
 #     silently fell back to sklearn-only mode without these) ---
 catboost==1.2.7
 shap==0.46.0
-torch==2.5.1
-torch-geometric==2.6.1
+# torch installed manually (CPU build)
+torch
+torch-geometric

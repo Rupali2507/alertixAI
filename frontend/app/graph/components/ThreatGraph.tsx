@@ -12,7 +12,7 @@ const ForceGraph3D = dynamic(() => import("react-force-graph-3d"), {
 });
 
 const ORCHESTRATOR_BASE_URL =
-  process.env.NEXT_PUBLIC_ORCHESTRATOR_URL ?? "http://localhost:8000";
+  process.env.NEXT_PUBLIC_ORCHESTRATOR_URL ?? "http://localhost:8001";
 const REFRESH_MS = 30000; // full rebuild is O(events) server-side — don't hammer it
 
 interface GraphPayload {

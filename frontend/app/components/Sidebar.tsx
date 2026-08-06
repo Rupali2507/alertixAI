@@ -11,10 +11,12 @@ import {
   HelpCircle,
   FileText,
   Network,
-  IdCard
+  IdCard,
+  LogIn,
 } from "lucide-react";
 
 const NAV_ITEMS = [
+  { href: "/login", label: "Login", icon: LogIn },
   { href: "/dashboard", label: "Threat Monitor", icon: ShieldAlert },
   { href: "/graph", label: "3D Threat Graph", icon: Network },
   { href: "/kyc-fraud", label: "KYC Fraud Graph", icon: IdCard },

@@ -29,7 +29,7 @@ export default function OnboardingPage() {
         
         setStage("verifying");
         
-        fetch("http://localhost:8000/simulate", {
+        fetch("http://localhost:8001/simulate", {
           method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ scenario: "kyc_fraud" })
         }).catch(() => {});
 

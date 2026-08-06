@@ -28,7 +28,7 @@ export default function PrivacyAuditPage() {
     }, 0);
     
     // Fetch REAL audit logs from backend
-    fetch("http://localhost:8000/audit")
+    fetch("http://localhost:8001/audit")
       .then(res => res.json())
       .then(data => {
         if (data.logs && data.logs.length > 0) {

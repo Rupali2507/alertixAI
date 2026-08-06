@@ -50,7 +50,11 @@ function trendDir(prev: number, curr: number): Dir {
 export default function ThreatMonitorPage() {
   // Pre-seed with realistic mock data so the demo looks instantly alive 
   // and judges don't see 0s before the live feed catches up.
-  const [events, setEvents] = useState<HighRiskEvent[]>(() => generateHighRiskEvents(4));
+  const [events, setEvents] = useState<HighRiskEvent[]>([]);
+
+useEffect(() => {
+  setEvents(generateHighRiskEvents(4));
+}, []);
   const [counts, setCounts] = useState({ total: 12543, allow: 11900, step_up: 580, block: 63 });
   const [flaggedCounts, setFlaggedCounts] = useState<SubScores>({
     behavioral: 28,
@@ -74,7 +78,7 @@ export default function ThreatMonitorPage() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       
-      const trigger = (scenario: string) => fetch("http://localhost:8000/simulate", {
+      const trigger = (scenario: string) => fetch("http://localhost:8001/simulate", {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ scenario })
       });
 
@@ -83,7 +87,7 @@ export default function ThreatMonitorPage() {
         case '2': trigger('impossible_travel'); break;
         case '3': trigger('insider_threat'); break;
         case '4': trigger('kyc_fraud'); break;
-        case 'r': fetch("http://localhost:8000/reset", { method: "POST" }); break;
+        case 'r': fetch("http://localhost:8001/reset", { method: "POST" }); break;
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -154,7 +158,7 @@ export default function ThreatMonitorPage() {
   };
 
   useEffect(() => {
-    const eventSource = new EventSource("http://localhost:8000/feed");
+    const eventSource = new EventSource("http://localhost:8001/feed");
 
     eventSource.onmessage = (evt) => {
       const data = JSON.parse(evt.data);

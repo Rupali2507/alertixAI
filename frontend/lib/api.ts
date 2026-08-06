@@ -11,7 +11,7 @@ import { DecisionEvent, generateMockEvent, generateMockFeed } from "./mockData";
 const USE_MOCK = false; // flip to false in Phase 6 once the live feed exists
 
 const ORCHESTRATOR_BASE_URL =
-  process.env.NEXT_PUBLIC_ORCHESTRATOR_URL ?? "http://localhost:8000";
+  process.env.NEXT_PUBLIC_ORCHESTRATOR_URL ?? "http://localhost:8001";
 
 /**
  * Fetch the initial batch of recent events for the dashboard.
@@ -112,13 +112,14 @@ export async function triggerStepUpAuth(
     await new Promise((r) => setTimeout(r, 1400));
     return { success: true, method };
   }
-  const res = await fetch(`${ORCHESTRATOR_BASE_URL}/stepup/${eventId}`, {
+  const res = await fetch(`${ORCHESTRATOR_BASE_URL}/stepup/initiate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ method }),
+    body: JSON.stringify({ user_id: eventId, method }),
   });
   if (!res.ok) throw new Error(`Step-up auth failed: ${res.status}`);
-  return res.json();
+  const data = await res.json(); // { challenge_id, method, status }
+  return { success: data.status === "pending", method: data.method };
 }
 
 /**

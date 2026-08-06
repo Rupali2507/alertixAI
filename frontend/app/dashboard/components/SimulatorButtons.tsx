@@ -3,7 +3,7 @@ import { Play } from "lucide-react";
 export default function SimulatorButtons() {
   const triggerSimulation = async (scenario: string) => {
     try {
-      await fetch("http://localhost:8000/simulate", {
+      await fetch("http://localhost:8001/simulate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ scenario }),

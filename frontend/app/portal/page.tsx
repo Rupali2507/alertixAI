@@ -13,7 +13,7 @@ export default function BankingPortal() {
       if (e.key === "3" && !blocked) {
         setLoadingOverride(true);
         // Ping backend simulator
-        fetch("http://localhost:8000/simulate", {
+        fetch("http://localhost:8001/simulate", {
           method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ scenario: "insider_threat" })
         }).catch(() => {});
         

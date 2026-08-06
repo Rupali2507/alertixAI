@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { Dispatch, SetStateAction } from "react";
 import {
   ShieldX,
   Loader2,
@@ -15,12 +16,7 @@ import { loginUser } from "@/lib/api";
 
 type Stage = "form" | "verifying" | "blocked" | "error";
 
-interface FallbackResult {
-  decision: "allow" | "step_up" | "block";
-  fused_score: number;
-  reason_codes?: string[];
-  session_token?: string;
-}
+
 
 export default function LoginPage() {
   const router = useRouter();
@@ -30,7 +26,11 @@ export default function LoginPage() {
   const [blockedInfo, setBlockedInfo] = useState<{ score: number; reasons: string[] } | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const simulateTyping = async (text: string, setter: (val: string) => void) => {
+  
+  const simulateTyping = async (
+  text: string,
+  setter: Dispatch<SetStateAction<string>>
+) => {
     setter("");
     for (let i = 0; i < text.length; i++) {
       await new Promise(r => setTimeout(r, 60)); // typing speed
@@ -55,36 +55,34 @@ export default function LoginPage() {
     let scenario = "normal";
     let typeUser = "user_5";
     let typePass = "••••••••";
-    let finalRoute = "/portal";
+    
 
     if (key === "1") {
-      scenario = "normal";
-    } else if (key === "2") {
-      scenario = "impossible_travel";
-      finalRoute = "/stepup?reason=login";
-    } else if (key === "5") {
-      typeUser = "Ratnesh Anand";
-      const attempts = incrementAttemptCount("ratnesh");
-      if (attempts === 1) {
-        scenario = "ratnesh_allow";
-      } else {
-        scenario = "ratnesh_block";
-        finalRoute = "blocked";
-      }
-    } else if (key === "6") {
-      typeUser = "frequent_user";
-      const attempts = incrementAttemptCount("frequent");
-      if (attempts < 3) {
-        scenario = "frequent_allow";
-      } else {
-        scenario = "frequent_block";
-        finalRoute = "blocked";
-      }
-    } else if (key === "7") {
-      typeUser = "fraud_ring_user";
-      scenario = "fraud_ring";
-      finalRoute = "blocked";
-    }
+  scenario = "normal";
+} else if (key === "2") {
+  scenario = "impossible_travel";
+} else if (key === "5") {
+  typeUser = "Ratnesh Anand";
+  const attempts = incrementAttemptCount("ratnesh");
+
+  if (attempts === 1) {
+    scenario = "ratnesh_allow";
+  } else {
+    scenario = "ratnesh_block";
+  }
+} else if (key === "6") {
+  typeUser = "frequent_user";
+  const attempts = incrementAttemptCount("frequent");
+
+  if (attempts < 3) {
+    scenario = "frequent_allow";
+  } else {
+    scenario = "frequent_block";
+  }
+} else if (key === "7") {
+  typeUser = "fraud_ring_user";
+  scenario = "fraud_ring";
+}
 
     setUserId("");
     setPassword("");
@@ -99,32 +97,39 @@ export default function LoginPage() {
     setStage("verifying");
     
     // Trigger backend orchestrator silently
-    fetch("http://localhost:8000/simulate", {
+    fetch("http://localhost:8001/simulate", {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ scenario })
     }).catch(() => {});
 
     // Wait for the simulated 'backend latency'
     await new Promise(r => setTimeout(r, 1200));
 
-    if (finalRoute === "blocked") {
-      let score = 0.88, reasons: string[] = [];
-      if (scenario === "ratnesh_block") { 
-        score = 0.88; 
-        reasons = ["Anomalous behavior detected: Impossible travel / Geo-velocity violation", "Abrupt IP location change detected within short time window"]; 
-      }
-      if (scenario === "frequent_block") { 
-        score = 0.85; 
-        reasons = ["Anomalous behavior detected: High login frequency threshold exceeded", "Please try again after some time."]; 
-      }
-      if (scenario === "fraud_ring") { 
-        score = 0.94; 
-        reasons = ["Anomalous behavior detected: Identity linked to known fraud ring pattern", "Account matched against active Threat Intelligence Blacklist"]; 
-      }
-      setBlockedInfo({ score, reasons });
-      setStage("blocked");
-    } else {
-      router.push(finalRoute);
+    try {
+    const result = await loginUser(typeUser, "demo");
+
+    switch (result.decision) {
+        case "allow":
+            router.push("/portal");
+            break;
+
+        case "step_up":
+            router.push("/stepup?reason=login");
+            break;
+
+        case "block":
+            setBlockedInfo({
+                score: result.fused_score,
+                reasons: result.reason_codes ?? [],
+            });
+            setStage("blocked");
+            break;
     }
+} catch (err) {
+  setErrorMsg(
+    err instanceof Error ? err.message : "Unable to sign in"
+  );
+  setStage("error");
+}
   };
 
   useEffect(() => {
@@ -140,13 +145,39 @@ export default function LoginPage() {
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setStage("verifying");
-    // Fallback for manual clicking
-    await new Promise(r => setTimeout(r, 1000));
-    router.push("/portal");
-  };
+  e.preventDefault();
 
+  setErrorMsg(null);
+  setBlockedInfo(null);
+  setStage("verifying");
+
+  try {
+    const result = await loginUser(userId, password);
+
+    switch (result.decision) {
+      case "allow":
+        router.push("/portal");
+        break;
+
+      case "step_up":
+        router.push("/stepup?reason=login");
+        break;
+
+      case "block":
+        setBlockedInfo({
+          score: result.fused_score,
+          reasons: result.reason_codes ?? [],
+        });
+        setStage("blocked");
+        break;
+    }
+  } catch (err) {
+    setErrorMsg(
+      err instanceof Error ? err.message : "Unable to sign in"
+    );
+    setStage("error");
+  }
+};
   const resetFormOnly = () => {
     setStage("form");
     setBlockedInfo(null);
