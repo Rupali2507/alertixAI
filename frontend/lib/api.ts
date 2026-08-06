@@ -115,9 +115,75 @@ export interface LoginResult {
   reason_codes: string[];
   session_token?: string;
   challenge_hint?: string;
+  /** True when this result was synthesized locally because the
+   * orchestrator was unreachable/erroring — not a real risk decision. */
+  demo?: boolean;
 }
 
 const DEVICE_ID_KEY = "alertixai_device_id";
+
+/**
+ * Fetch with a hard timeout, since a hung/unreachable orchestrator
+ * shouldn't leave the login screen stuck on "Verifying…" forever.
+ */
+async function fetchWithTimeout(
+  url: string,
+  opts: RequestInit,
+  timeoutMs = 6000
+): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...opts, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * Deterministic, self-contained stand-in for the orchestrator's decision
+ * when it's unreachable/down/erroring. Same user_id always maps to the
+ * same demo outcome, so the demo is reproducible across attempts.
+ *
+ * This is a UI fallback only — it never runs when the orchestrator
+ * actually responds, and it never overrides a real 401/403 from a
+ * reachable backend.
+ */
+function demoLoginResult(userId: string): LoginResult {
+  let hash = 0;
+  for (let i = 0; i < userId.length; i++) {
+    hash = (hash * 31 + userId.charCodeAt(i)) >>> 0;
+  }
+  const score = (hash % 100) / 100;
+
+  if (score >= 0.65) {
+    return {
+      decision: "block",
+      fused_score: score,
+      reason_codes: [
+        "Unusual login location for this account",
+        "Device fingerprint not previously seen",
+        "Multiple rapid login attempts",
+      ],
+      demo: true,
+    };
+  }
+  if (score >= 0.3) {
+    return {
+      decision: "step_up",
+      fused_score: score,
+      reason_codes: ["New device fingerprint", "Login velocity above baseline"],
+      demo: true,
+    };
+  }
+  return {
+    decision: "allow",
+    fused_score: score,
+    reason_codes: [],
+    session_token: `demo_session_${Date.now()}`,
+    demo: true,
+  };
+}
 
 export function getOrCreateDeviceId(): string {
   if (typeof window === "undefined") return "server";
@@ -138,17 +204,28 @@ export async function loginUser(
     return { decision: "allow", fused_score: 0.12, reason_codes: [], session_token: "mock_session" };
   }
 
-  const res = await fetch(`${ORCHESTRATOR_BASE_URL}/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      user_id: userId,
-      password,
-      device_id: getOrCreateDeviceId(),
-    }),
-  });
+  let res: Response;
+  try {
+    res = await fetchWithTimeout(`${ORCHESTRATOR_BASE_URL}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_id: userId,
+        password,
+        device_id: getOrCreateDeviceId(),
+      }),
+    });
+  } catch (err) {
+    // Network error, DNS failure, timeout/abort, backend process down —
+    // the orchestrator was never reached at all. Fall back to demo mode
+    // instead of surfacing a raw fetch error.
+    console.warn("[loginUser] orchestrator unreachable, using demo fallback:", err);
+    return demoLoginResult(userId);
+  }
 
   if (res.status === 401) {
+    // Backend WAS reachable and explicitly rejected these credentials —
+    // this is a real answer, never fall back for it.
     throw new Error("Invalid credentials");
   }
   if (res.status === 403) {
@@ -162,7 +239,10 @@ export async function loginUser(
     };
   }
   if (!res.ok) {
-    throw new Error(`Login failed: ${res.status}`);
+    // Backend reachable but erroring (500s, bad gateway from a crashed
+    // orchestrator, etc.) — treat the same as "down" for UX purposes.
+    console.warn(`[loginUser] orchestrator returned ${res.status}, using demo fallback`);
+    return demoLoginResult(userId);
   }
   return res.json();
 }
