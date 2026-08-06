@@ -77,6 +77,7 @@ async def live_event_generator():
             "hmac": short_hmac,
             "score": round(result.fused_score, 2),
             "signalFusion": signal_fusion,
+            "insiderMisuseScore": round(sub_scores["insider_misuse"].score, 2),
             "decision": result.decision,
             "reasonLabel": reason_label,
             "timestamp": raw_event.get("timestamp"),

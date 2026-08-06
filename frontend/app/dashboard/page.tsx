@@ -29,23 +29,22 @@ import SimulatorButtons from "./components/SimulatorButtons";
 const MAX_EVENTS = 8;
 
 function averageSubScores(events: HighRiskEvent[]): SubScores {
-  // Derives a rough fusion breakdown from the high-risk event signal-fusion
-  // values, purely for mock display until Muskan's real fusion output lands.
   const n = events.length || 1;
   const totals = events.reduce(
     (acc, e) => {
       acc.behavioral += e.signalFusion[0] * 100;
       acc.deviceTrust += e.signalFusion[1] * 100;
       acc.kyc += e.signalFusion[2] * 100;
+      acc.insiderMisuse += (e.insiderMisuseScore ?? 0) * 100;
       return acc;
     },
-    { behavioral: 0, deviceTrust: 0, kyc: 0 }
+    { behavioral: 0, deviceTrust: 0, kyc: 0, insiderMisuse: 0 }
   );
   return {
     behavioral: Math.round(totals.behavioral / n),
     deviceTrust: Math.round(totals.deviceTrust / n),
     kyc: Math.round(totals.kyc / n),
-    insiderMisuse: 0,
+    insiderMisuse: Math.round(totals.insiderMisuse / n),
   };
 }
 
@@ -70,13 +69,12 @@ export default function ThreatMonitorPage() {
       const newEvent: HighRiskEvent = {
         id: data.id,
         hmac: data.hmac,
-        score: Math.round(data.score * 100), // Map 0-1 backend score to 0-100 UI score
+        score: Math.round(data.score * 100),
         signalFusion: data.signalFusion,
+        insiderMisuseScore: data.insiderMisuseScore,
         decision: data.decision,
         reasonLabel: data.reasonLabel,
         timestamp: data.timestamp,
-        // we can store raw data here if needed, but HighRiskEvent typing doesn't include it.
-        // We pass the full backend result through to generateCaseDetail below
       };
       
       // Store the raw backend result so CaseDrillDownPanel can see it

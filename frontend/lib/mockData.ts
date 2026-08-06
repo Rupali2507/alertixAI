@@ -183,11 +183,12 @@ export interface StepUpAuthStats {
 
 export interface HighRiskEvent {
   id: string;
-  hmac: string; // shortened display hash, e.g. "a7f2e9b0...4c1d"
-  score: number; // 0-1
-  signalFusion: [number, number, number]; // 3 sub-signal intensities 0-1
+  hmac: string;
+  score: number;
+  signalFusion: [number, number, number];
+  insiderMisuseScore?: number; // real insider-misuse detector score (0-1); populated only by the live SSE feed, undefined in mock mode
   decision: Decision;
-  reasonLabel: string; // "KYC Failure" / "Identity Verified"
+  reasonLabel: string;
   timestamp: string;
 }
 
