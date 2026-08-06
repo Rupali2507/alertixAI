@@ -23,9 +23,9 @@ export default function SHAPReasonCodes({ reasonCodes }: SHAPReasonCodesProps) {
     return (
       <div>
         <h3 className="text-sm font-medium text-mist mb-3 tracking-label text-[11px]">
-          Reason Codes (SHAP)
+          Why This Was Flagged
         </h3>
-        <p className="text-sm text-faint">No reason codes fired for this event.</p>
+        <p className="text-sm text-faint">No specific reason codes for this event.</p>
       </div>
     );
   }
@@ -33,7 +33,7 @@ export default function SHAPReasonCodes({ reasonCodes }: SHAPReasonCodesProps) {
   return (
     <div>
       <h3 className="text-sm font-medium text-mist mb-3 tracking-label text-[11px]">
-        Reason Codes (SHAP)
+        Why This Was Flagged
       </h3>
       <div style={{ width: "100%", height: Math.max(160, data.length * 36) }}>
         <ResponsiveContainer>

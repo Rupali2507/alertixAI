@@ -32,7 +32,7 @@ export default function TrustGauge({
 }: TrustGaugeProps) {
   const id = useId().replace(/:/g, "");
   const clamped = Math.max(0, Math.min(1, score));
-  const trustPct = Math.round((1 - clamped) * 100); // display as trust, not raw risk
+  const displayPct = Math.round(clamped * 100); // display as risk, not trust
 
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -94,7 +94,7 @@ export default function TrustGauge({
           }}
         >
           <span style={{ fontSize: size * 0.24, fontWeight: 500, color: "#F6F5FA", letterSpacing: "-0.02em" }}>
-            {trustPct}
+            {displayPct}
             <span style={{ fontSize: size * 0.12, color: "rgba(246,245,250,0.4)" }}>%</span>
           </span>
           {label && (

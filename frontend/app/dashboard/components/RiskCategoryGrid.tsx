@@ -18,38 +18,38 @@ interface CategoryDef {
 const CATEGORIES: CategoryDef[] = [
   {
     key: "behavioral",
-    label: "Anomalous Behavior",
-    detector: "Isolation Forest + Autoencoder",
-    description: "Login velocity, off-hour access, transaction pattern deviation from user baseline.",
+    label: "Behavioral Risk",
+    detector: "Is the user acting normally?",
+    description: "Checks for unusual login times, new locations, or weird transaction amounts.",
     icon: Activity,
   },
   {
     key: "deviceTrust",
-    label: "New Device Usage",
-    detector: "GraphSAGE + GAT link prediction",
-    description: "First-seen devices, device/IP fan-out across unrelated accounts.",
+    label: "Device Risk",
+    detector: "Is this device or IP safe?",
+    description: "Checks if a single device or IP address is secretly accessing many unrelated accounts.",
     icon: Laptop2,
   },
   {
     key: "kyc",
-    label: "Suspicious Onboarding",
-    detector: "CatBoost + SHAP",
-    description: "Identity reuse across accounts, rapid KYC edits, edit-to-transaction bursts.",
+    label: "Identity Risk",
+    detector: "Is this a real person?",
+    description: "Catches fake identities by checking for reused PAN cards, phones, and addresses.",
     icon: IdCard,
   },
   {
     key: "insiderMisuse",
-    label: "Privileged Access Misuse",
-    detector: "Cohort Isolation Forest + rule engine",
-    description: "Balance overrides, mass exports, peer-cohort deviation for admin roles.",
+    label: "Insider Risk",
+    detector: "Are employees acting safely?",
+    description: "Monitors bank employees to stop them from making huge unauthorized changes or stealing data.",
     icon: UserSearch,
   },
 ];
 
 function statusFor(score01: number): { label: string; className: string; dot: string } {
-  if (score01 < ALLOW_MAX) return { label: "Nominal", className: "text-success", dot: "bg-success" };
-  if (score01 < STEP_UP_MAX) return { label: "Elevated", className: "text-warning", dot: "bg-warning" };
-  return { label: "Critical", className: "text-danger", dot: "bg-danger" };
+  if (score01 < ALLOW_MAX) return { label: "Safe", className: "text-success", dot: "bg-success" };
+  if (score01 < STEP_UP_MAX) return { label: "Warning", className: "text-warning", dot: "bg-warning" };
+  return { label: "Danger", className: "text-danger", dot: "bg-danger" };
 }
 
 interface RiskCategoryGridProps {
@@ -96,7 +96,7 @@ export default function RiskCategoryGrid({ subScores, flaggedCounts, onSelectCat
 
               <div className="h-1 rounded-full bg-panel-2 overflow-hidden mb-3">
                 <div
-                  className={status.label === "Critical" ? "h-full bg-danger" : status.label === "Elevated" ? "h-full bg-warning" : "h-full bg-success"}
+                  className={status.label === "Danger" ? "h-full bg-danger" : status.label === "Warning" ? "h-full bg-warning" : "h-full bg-success"}
                   style={{ width: `${Math.min(score01 * 100, 100)}%` }}
                 />
               </div>

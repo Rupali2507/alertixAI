@@ -76,7 +76,7 @@ export default function CaseDrillDownPanel({ detail, onClose }: CaseDrillDownPan
       <div className="fixed top-0 right-0 h-full w-full max-w-lg glass-card-strong border-l border-border z-50 overflow-y-auto shadow-2xl">
         <div className="flex items-center justify-between px-6 py-5 border-b border-border sticky top-0 bg-panel/90 backdrop-blur-md z-10">
           <div>
-            <p className="text-[10px] text-faint tracking-label mb-1">Identity Investigation</p>
+            <p className="text-[10px] text-faint tracking-label mb-1">Case Details</p>
             <h2 className="text-lg font-medium text-ink font-mono">{detail.hmac}</h2>
           </div>
           <div className="flex items-center gap-3">
@@ -103,7 +103,7 @@ export default function CaseDrillDownPanel({ detail, onClose }: CaseDrillDownPan
           <div className="glass-card rounded-2xl p-6 flex items-center gap-6">
             <TrustGauge score={detail.score / 100} size={110} strokeWidth={9} showValue />
             <div>
-              <p className="text-[11px] text-faint tracking-label mb-1">Fused decision</p>
+              <p className="text-[11px] text-faint tracking-label mb-1">Final Decision</p>
               <p className="text-sm text-ink">
                 Risk score <span className="font-mono text-ink">{(detail.score / 100).toFixed(2)}</span> at{" "}
                 {new Date(detail.timestamp).toLocaleTimeString()}
@@ -132,14 +132,14 @@ export default function CaseDrillDownPanel({ detail, onClose }: CaseDrillDownPan
           {detail.investigator_report && (
             <div className="rounded-2xl bg-brand/5 border border-brand/20 p-5 relative overflow-hidden">
               <div className="absolute top-0 left-0 w-1 h-full bg-brand" />
-              <h3 className="text-[11px] font-medium text-brand tracking-label mb-3">LLM Investigator Report</h3>
+              <h3 className="text-[11px] font-medium text-brand tracking-label mb-3">AI Explanation</h3>
               <p className="text-sm text-ink leading-relaxed">{detail.investigator_report}</p>
             </div>
           )}
 
           {/* Privacy / audit */}
           <div>
-            <h3 className="text-sm font-medium text-mist mb-3 tracking-label text-[11px]">Privacy Vault Compliance</h3>
+            <h3 className="text-sm font-medium text-mist mb-3 tracking-label text-[11px]">Privacy Shield Status</h3>
             <div className="rounded-2xl bg-void border border-border p-4 space-y-2 text-[11px] font-mono">
               <div className="flex justify-between border-b border-border/50 pb-2">
                 <span className="text-faint">Raw PII Hash</span>

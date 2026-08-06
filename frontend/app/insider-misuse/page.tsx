@@ -50,10 +50,10 @@ export default function InsiderMisusePage() {
       <main className="p-6 space-y-6">
         <div className="flex items-start justify-between">
           <div>
-            <p className="tracking-label text-[11px] text-brand mb-2">insider threat</p>
+            <p className="tracking-label text-[11px] text-brand mb-2">Employee Monitor</p>
             <h1 className="text-2xl font-medium text-ink">Active Investigations</h1>
             <p className="text-sm text-mist font-mono mt-1">
-              Filtering: INTERNAL_THREAT_V2 | Window: Last 24H
+              Monitoring active employees | Window: Last 24H
             </p>
           </div>
           <div className="flex gap-2">

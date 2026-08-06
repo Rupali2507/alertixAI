@@ -17,12 +17,12 @@ export default function ThresholdControlsCard({ initial }: ThresholdControlsCard
     <div className="rounded-xl border border-border bg-panel p-5">
       <h2 className="flex items-center gap-2 text-base font-semibold text-ink mb-5">
         <SlidersHorizontal size={16} className="text-brand" />
-        Threshold Controls
+        Alert Sensitivity
       </h2>
 
       <div className="mb-5">
         <div className="flex justify-between text-sm mb-1">
-          <span className="text-mist">Mass Export Rate (GB/hr)</span>
+          <span className="text-mist">Mass Export Limit (GB/hr)</span>
           <span className="font-mono text-ink">{massExport} GB</span>
         </div>
         <input
@@ -42,7 +42,7 @@ export default function ThresholdControlsCard({ initial }: ThresholdControlsCard
 
       <div className="mb-5">
         <div className="flex justify-between text-sm mb-1">
-          <span className="text-mist">KYC Override Velocity</span>
+          <span className="text-mist">Max Allowed Profile Edits</span>
           <span className="font-mono text-ink">{kycVelocity} / 10m</span>
         </div>
         <input
