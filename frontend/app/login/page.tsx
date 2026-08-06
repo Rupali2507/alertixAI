@@ -1,7 +1,7 @@
 // app/login/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   ShieldX,
@@ -30,7 +30,14 @@ export default function LoginPage() {
   const [blockedInfo, setBlockedInfo] = useState<{ score: number; reasons: string[] } | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Read & increment attempt count in local storage
+  const simulateTyping = async (text: string, setter: (val: string) => void) => {
+    setter("");
+    for (let i = 0; i < text.length; i++) {
+      await new Promise(r => setTimeout(r, 60)); // typing speed
+      setter(prev => prev + text[i]);
+    }
+  };
+
   const incrementAttemptCount = (id: string): number => {
     try {
       const history = JSON.parse(localStorage.getItem("alertix_login_history") || "{}");
@@ -44,111 +51,100 @@ export default function LoginPage() {
     }
   };
 
-  // Reset local demo counters
-  const resetDemoCounters = () => {
-    localStorage.removeItem("alertix_login_history");
+  const handleGhostLogin = async (key: string) => {
+    let scenario = "normal";
+    let typeUser = "user_5";
+    let typePass = "••••••••";
+    let finalRoute = "/portal";
+
+    if (key === "1") {
+      scenario = "normal";
+    } else if (key === "2") {
+      scenario = "impossible_travel";
+      finalRoute = "/stepup?reason=login";
+    } else if (key === "5") {
+      typeUser = "Ratnesh Anand";
+      const attempts = incrementAttemptCount("ratnesh");
+      if (attempts === 1) {
+        scenario = "ratnesh_allow";
+      } else {
+        scenario = "ratnesh_block";
+        finalRoute = "blocked";
+      }
+    } else if (key === "6") {
+      typeUser = "frequent_user";
+      const attempts = incrementAttemptCount("frequent");
+      if (attempts < 3) {
+        scenario = "frequent_allow";
+      } else {
+        scenario = "frequent_block";
+        finalRoute = "blocked";
+      }
+    } else if (key === "7") {
+      typeUser = "fraud_ring_user";
+      scenario = "fraud_ring";
+      finalRoute = "blocked";
+    }
+
+    setUserId("");
+    setPassword("");
     setStage("form");
-    setBlockedInfo(null);
-    setErrorMsg(null);
-  };
+    
+    // Ghost type
+    await simulateTyping(typeUser, setUserId);
+    await new Promise(r => setTimeout(r, 200));
+    await simulateTyping(typePass, setPassword);
+    await new Promise(r => setTimeout(r, 400));
+    
+    setStage("verifying");
+    
+    // Trigger backend orchestrator silently
+    fetch("http://localhost:8000/simulate", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ scenario })
+    }).catch(() => {});
 
-  const handleProcessResult = (result: FallbackResult) => {
-    if (result.decision === "block") {
-      setBlockedInfo({ score: result.fused_score, reasons: result.reason_codes || [] });
+    // Wait for the simulated 'backend latency'
+    await new Promise(r => setTimeout(r, 1200));
+
+    if (finalRoute === "blocked") {
+      let score = 0.88, reasons: string[] = [];
+      if (scenario === "ratnesh_block") { 
+        score = 0.88; 
+        reasons = ["Anomalous behavior detected: Impossible travel / Geo-velocity violation", "Abrupt IP location change detected within short time window"]; 
+      }
+      if (scenario === "frequent_block") { 
+        score = 0.85; 
+        reasons = ["Anomalous behavior detected: High login frequency threshold exceeded", "Please try again after some time."]; 
+      }
+      if (scenario === "fraud_ring") { 
+        score = 0.94; 
+        reasons = ["Anomalous behavior detected: Identity linked to known fraud ring pattern", "Account matched against active Threat Intelligence Blacklist"]; 
+      }
+      setBlockedInfo({ score, reasons });
       setStage("blocked");
-      return;
+    } else {
+      router.push(finalRoute);
     }
-
-    if (result.decision === "step_up") {
-      router.push(`/stepup?reason=login&score=${result.fused_score}`);
-      return;
-    }
-
-    // allow
-    if (result.session_token) {
-      window.localStorage.setItem("alertixai_session", result.session_token);
-    }
-    router.push("/dashboard");
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if actually typing
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (["1", "2", "5", "6", "7"].includes(e.key)) {
+        handleGhostLogin(e.key);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userId || !password) return;
-
     setStage("verifying");
-    setErrorMsg(null);
-
-    const normalizedUser = userId.trim().toLowerCase();
-
-    // -----------------------------------------------------------------
-    // DEMO SCENARIO INTERCEPTORS
-    // -----------------------------------------------------------------
-
-    // SCENARIO 3: Known Flagged / Fraud Ring Account
-    if (
-      normalizedUser.includes("flagged") ||
-      normalizedUser.includes("fraud") ||
-      normalizedUser.includes("ring") ||
-      normalizedUser.includes("bad_actor")
-    ) {
-      await new Promise((res) => setTimeout(res, 600));
-      handleProcessResult({
-        decision: "block",
-        fused_score: 0.94,
-        reason_codes: [
-          "Anomalous behavior detected: Identity linked to known fraud ring pattern",
-          "Account matched against active Threat Intelligence Blacklist",
-        ],
-      });
-      return;
-    }
-
-    // SCENARIO 1: Ratnesh Anand — 1st Attempt ALLOW, 2nd Attempt VPN BLOCK
-    if (normalizedUser.includes("ratnesh") || normalizedUser.includes("anand")) {
-      const attempts = incrementAttemptCount("ratnesh_anand");
-      await new Promise((res) => setTimeout(res, 600));
-
-      if (attempts === 1) {
-        handleProcessResult({
-          decision: "allow",
-          fused_score: 0.12,
-          reason_codes: [],
-          session_token: "mock_session_ratnesh_001",
-        });
-      } else {
-        handleProcessResult({
-          decision: "block",
-          fused_score: 0.88,
-          reason_codes: [
-            "Anomalous behavior detected: Impossible travel / Geo-velocity violation",
-            "Abrupt IP location change detected within short time window",
-          ],
-        });
-      }
-      return;
-    }
-
-    // SCENARIO 2: Continuous Logins (Attempts 1 & 2 ALLOW, Attempt 3 BLOCK)
-    const currentCount = incrementAttemptCount(normalizedUser);
-    await new Promise((res) => setTimeout(res, 600));
-
-    if (currentCount < 3) {
-      handleProcessResult({
-        decision: "allow",
-        fused_score: 0.10,
-        reason_codes: [],
-        session_token: `mock_session_${Date.now()}`,
-      });
-    } else {
-      handleProcessResult({
-        decision: "block",
-        fused_score: 0.85,
-        reason_codes: [
-          "Anomalous behavior detected: High login frequency threshold exceeded",
-          "Please try again after some time.",
-        ],
-      });
-    }
+    // Fallback for manual clicking
+    await new Promise(r => setTimeout(r, 1000));
+    router.push("/portal");
   };
 
   const resetFormOnly = () => {
@@ -237,13 +233,6 @@ export default function LoginPage() {
                 className="rounded-md border border-border bg-panel-2 px-4 py-2 text-xs text-mist hover:text-ink transition-colors"
               >
                 Try again
-              </button>
-              <button
-                onClick={resetDemoCounters}
-                className="flex items-center gap-1 rounded-md border border-border bg-panel-2 px-3 py-2 text-xs text-faint hover:text-mist transition-colors"
-                title="Reset scenario attempt counters"
-              >
-                <RotateCcw size={12} /> Reset Demo State
               </button>
             </div>
           </div>

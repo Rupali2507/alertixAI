@@ -11,7 +11,6 @@ import HighRiskEventsTable from "./components/HighRiskEventsTable";
 import AnomalousOriginsCard, { FlaggedOrigin } from "./components/AnomalousOriginsCard";
 import ScoreFusionCard from "./components/ScoreFusionCard";
 import CaseDrillDownPanel from "./components/CaseDrillDownPanel";
-import SimulatorButtons from "./components/SimulatorButtons";
 import TopBar from "../components/TopBar";
 
 const MAX_EVENTS = 8;
@@ -69,6 +68,26 @@ export default function ThreatMonitorPage() {
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 60000);
     return () => clearInterval(t);
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      
+      const trigger = (scenario: string) => fetch("http://localhost:8000/simulate", {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ scenario })
+      });
+
+      switch (e.key) {
+        case '1': trigger('normal'); break;
+        case '2': trigger('impossible_travel'); break;
+        case '3': trigger('insider_threat'); break;
+        case '4': trigger('kyc_fraud'); break;
+        case 'r': fetch("http://localhost:8000/reset", { method: "POST" }); break;
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
   const prevSubScoresRef = useRef<SubScores | null>(null);
   const sinceLastTrendRef = useRef(0);
@@ -139,6 +158,15 @@ export default function ThreatMonitorPage() {
 
     eventSource.onmessage = (evt) => {
       const data = JSON.parse(evt.data);
+
+      if (data.type === "reset") {
+        setEvents([]);
+        setCounts({ total: 0, allow: 0, step_up: 0, block: 0 });
+        setFlaggedCounts({ behavioral: 0, deviceTrust: 0, kyc: 0, insiderMisuse: 0 });
+        setOrigin(null);
+        setSelectedCase(null);
+        return;
+      }
 
       const newEvent: HighRiskEvent = {
         id: data.id,
@@ -244,11 +272,6 @@ export default function ThreatMonitorPage() {
         <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-4">
           <AnomalousOriginsCard origin={origin} />
           <ScoreFusionCard subScores={subScores} />
-        </div>
-
-        <div>
-          <p className="tracking-label text-[11px] text-faint mb-3">demo controls · not part of production surface</p>
-          <SimulatorButtons />
         </div>
       </main>
 
