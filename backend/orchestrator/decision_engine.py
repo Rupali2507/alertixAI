@@ -22,6 +22,19 @@ def _build_fusion() -> ScoreFusion:
     )
 
 
+def _build_login_fusion() -> ScoreFusion:
+    """Same idea as _build_fusion(), scoped to the three detectors relevant to a login event."""
+    w = config.login_fusion_weights
+    return ScoreFusion(
+        weights={
+            "behavioral": w.behavioral,
+            "device_trust": w.device_trust,
+            "login_trust": w.login_trust,
+        },
+        use_meta_classifier=False,
+    )
+
+
 def fuse_scores(sub_scores: dict[str, DetectorScore]) -> float:
     """
     Now goes through WeightedAverageFusion, which confidence-weights each
@@ -29,6 +42,10 @@ def fuse_scores(sub_scores: dict[str, DetectorScore]) -> float:
     longer silently drags the fused score using its nominal config weight.
     """
     return _build_fusion().fuse(sub_scores)
+
+
+def fuse_login_scores(sub_scores: dict[str, DetectorScore]) -> float:
+    return _build_login_fusion().fuse(sub_scores)
 
 
 def decide(fused_score: float) -> str:
@@ -41,9 +58,40 @@ def decide(fused_score: float) -> str:
         return "block"
 
 
+def decide_login(fused_score: float) -> str:
+    t = config.login_thresholds
+    if fused_score < t.allow_max:
+        return "allow"
+    elif fused_score < t.step_up_max:
+        return "step_up"
+    else:
+        return "block"
+
+
 def build_decision(sub_scores: dict[str, DetectorScore]) -> FusedScore:
     fused = fuse_scores(sub_scores)
     decision = decide(fused)
+
+    ranked = aggregate_reason_codes(sub_scores)
+    reason_codes = [r["description"] for r in ranked]
+
+    return FusedScore(
+        fused_score=fused,
+        sub_scores=sub_scores,
+        decision=decision,
+        reason_codes=reason_codes,
+        reason_code_details=ranked,
+    )
+
+
+def build_login_decision(sub_scores: dict[str, DetectorScore]) -> FusedScore:
+    """
+    Same shape as build_decision, but uses login-specific fusion weights
+    and thresholds. sub_scores here is expected to have exactly
+    {"behavioral", "device_trust", "login_trust"} keys.
+    """
+    fused = fuse_login_scores(sub_scores)
+    decision = decide_login(fused)
 
     ranked = aggregate_reason_codes(sub_scores)
     reason_codes = [r["description"] for r in ranked]
