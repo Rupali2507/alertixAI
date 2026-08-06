@@ -59,7 +59,7 @@ export default function NewApplicationModal({ onClose, onSubmit }: Props) {
 
         <div className="p-6 space-y-5">
           <p className="text-xs text-mist leading-relaxed">
-            Enter the applicant's declared details along with the device, IP, and face-scan reference
+            Enter the applicant&apos;s declared details along with the device, IP, and face-scan reference
             captured during their onboarding session. These get checked against the identity graph.
           </p>
 
