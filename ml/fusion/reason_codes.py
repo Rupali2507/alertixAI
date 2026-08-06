@@ -33,6 +33,11 @@ _SEVERITY_PRIOR = {
     "anomalous_vs_peer_cohort": 5,
     "unusual_login_time": 4, "new_device": 4, "kyc_mismatch": 5,
     "rapid_kyc_edit_pattern": 5, "multiple_kyc_edits_recent": 4,
+    # login_trust (JA3 / geo-velocity / login-frequency)
+    "impossible_travel_velocity": 10, "known_automation_tooling": 9,
+    "credential_stuffing_ip_velocity": 9, "brute_force_velocity": 8,
+    "ja3_shared_across_many_users": 7, "high_failed_login_ratio": 6,
+    "new_country_login": 5, "new_ja3_fingerprint": 3,
 }
 
 _HUMAN_READABLE = {
@@ -52,6 +57,15 @@ _HUMAN_READABLE = {
     "kyc_field_override": "Administrator directly overrode a KYC field",
     "mass_export_pattern": "Administrator performed an unusually high volume of data exports",
     "anomalous_vs_peer_cohort": "Admin activity unusual compared to peers in the same role",
+    # login_trust
+    "new_ja3_fingerprint": "Login from a browser/TLS client not seen before for this user",
+    "ja3_shared_across_many_users": "This exact TLS client fingerprint is shared across many accounts",
+    "known_automation_tooling": "Login attempt matched a known automation/bot TLS signature",
+    "impossible_travel_velocity": "Login location implies impossible travel speed from the last login",
+    "new_country_login": "Login from a country not seen before for this user",
+    "brute_force_velocity": "Unusually many login attempts for this account in a short window",
+    "credential_stuffing_ip_velocity": "Unusually many login attempts from this IP across accounts",
+    "high_failed_login_ratio": "Most recent login attempts for this account have failed",
 }
 
 
