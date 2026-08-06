@@ -44,7 +44,7 @@ export default function SHAPReasonCodes({ reasonCodes }: SHAPReasonCodesProps) {
             />
             <ReferenceLine x={0} stroke="#212b38" />
             <Tooltip
-              formatter={(value: number) => [
+              formatter={(value: any) => [
                 value.toFixed(2),
                 value > 0 ? "Increases risk" : "Decreases risk",
               ]}

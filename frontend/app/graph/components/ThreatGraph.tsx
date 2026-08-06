@@ -13,7 +13,7 @@ interface GraphData {
 
 export default function ThreatGraph() {
   const [data, setData] = useState<GraphData | null>(null);
-  const fgRef = useRef<any>();
+  const fgRef = useRef<any>(null);
 
   useEffect(() => {
     // Generate a mock dense graph that looks impressive for the GNN visualization

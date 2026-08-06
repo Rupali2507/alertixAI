@@ -45,7 +45,7 @@ export default function SubScoreBreakdown({ subScores }: SubScoreBreakdownProps)
               tickLine={false}
             />
             <Tooltip
-              formatter={(value: number) => [`${value}`, "Score"]}
+              formatter={(value: any) => [`${value}`, "Score"]}
               contentStyle={{
                 background: "#131a24",
                 border: "1px solid #212b38",
